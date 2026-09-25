@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Join BinaryHeart at Northwestern</title>
   <meta name="description" content="Join the BinaryHeart Northwestern mailing list in one tap." />
   <meta name="theme-color" content="#f7f8fb" id="theme-color" />
@@ -55,12 +55,12 @@
       --err: #fca5a5;
     }
     .theme-toggle {
-      position: fixed; z-index: 10;
-      top: max(14px, env(safe-area-inset-top)); right: max(14px, env(safe-area-inset-right));
-      width: 42px; height: 42px; border-radius: 50%;
+      /* Inside each card's top-right corner, so it never covers the card */
+      position: absolute; z-index: 1; top: 16px; right: 16px;
+      width: 38px; height: 38px; border-radius: 50%;
       display: grid; place-items: center; cursor: pointer;
       color: var(--heart); background: var(--card);
-      border: 1px solid var(--line); box-shadow: 0 4px 14px -6px rgba(17, 24, 39, .3);
+      border: 1px solid var(--line);
       -webkit-tap-highlight-color: transparent;
     }
     .theme-toggle svg { width: 20px; height: 20px; }
@@ -68,7 +68,9 @@
     * { box-sizing: border-box; }
     html, body { margin: 0; }
     body {
-      min-height: 100dvh;
+      /* svh = the screen area between Safari's bars, so the card centers in what you can see */
+      min-height: 100vh;
+      min-height: 100svh;
       font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
       color: var(--ink);
       background:
@@ -78,7 +80,7 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      padding: max(24px, env(safe-area-inset-top)) 16px max(24px, env(safe-area-inset-bottom));
+      padding: 24px 16px;
       -webkit-font-smoothing: antialiased;
     }
     main { width: 100%; max-width: 440px; }
@@ -96,6 +98,8 @@
     }
     .brand { display: flex; align-items: center; gap: 12px; margin-bottom: 18px; }
     .brand img { width: 44px; height: 44px; }
+    /* The logo's navy half vanishes on the dark card, so give it a white tile */
+    :root[data-theme="dark"] .brand img { background: #fff; border-radius: 12px; padding: 5px; }
     .brand .wordmark { font-weight: 800; font-size: 17px; letter-spacing: -.01em; line-height: 1.1; }
     .brand .binary { color: var(--red); }
     .brand .heart { color: var(--heart); }
@@ -128,6 +132,16 @@
     .suffix[hidden] { display: none; }
     .hint { min-height: 20px; margin: 8px 2px 0; font-size: 14px; color: var(--muted); }
     .hint.err { color: var(--err); }
+    .hint.ok { color: var(--ok); font-weight: 600; }
+    /* Keep Safari/Chrome AutoFill from painting the field yellow */
+    input[type="email"]:-webkit-autofill,
+    input[type="email"]:-webkit-autofill:hover,
+    input[type="email"]:-webkit-autofill:focus {
+      -webkit-text-fill-color: var(--ink);
+      -webkit-box-shadow: 0 0 0 1000px var(--card) inset;
+      caret-color: var(--ink);
+      transition: background-color 99999s;
+    }
     .hint button {
       font: inherit; color: var(--heart); background: none; border: 0; padding: 0;
       text-decoration: underline; cursor: pointer;
@@ -165,6 +179,7 @@
     .note a { color: inherit; }
 
     .done { text-align: center; }
+    .brand-outside { justify-content: center; margin-bottom: 16px; }
     .check {
       width: 64px; height: 64px; margin: 4px auto 14px; border-radius: 50%;
       display: grid; place-items: center; background: var(--ok-bg); color: var(--ok);
@@ -187,13 +202,13 @@
   </style>
 </head>
 <body>
-  <button class="theme-toggle" id="theme-toggle" type="button" aria-label="Switch to dark mode">
-    <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M21.752 15.002A9.72 9.72 0 0 1 18 15.75c-5.385 0-9.75-4.365-9.75-9.75 0-1.33.266-2.597.748-3.752A9.753 9.753 0 0 0 3 11.25C3 16.635 7.365 21 12.75 21a9.753 9.753 0 0 0 9.002-5.998Z"/></svg>
-    <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M12 3v2.25m6.364.386-1.591 1.591M21 12h-2.25m-.386 6.364-1.591-1.591M12 18.75V21m-4.773-4.227-1.591 1.591M5.25 12H3m4.227-4.773L5.636 5.636M15.75 12a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0Z"/></svg>
-  </button>
   <main>
     <!-- Step 1: the form -->
     <section class="card" id="form-view">
+      <button class="theme-toggle" type="button" aria-label="Switch to dark mode">
+        <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M21.752 15.002A9.72 9.72 0 0 1 18 15.75c-5.385 0-9.75-4.365-9.75-9.75 0-1.33.266-2.597.748-3.752A9.753 9.753 0 0 0 3 11.25C3 16.635 7.365 21 12.75 21a9.753 9.753 0 0 0 9.002-5.998Z"/></svg>
+        <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M12 3v2.25m6.364.386-1.591 1.591M21 12h-2.25m-.386 6.364-1.591-1.591M12 18.75V21m-4.773-4.227-1.591 1.591M5.25 12H3m4.227-4.773L5.636 5.636M15.75 12a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0Z"/></svg>
+      </button>
       <div class="brand">
         <img src="/icon.svg" alt="" />
         <div>
@@ -202,7 +217,7 @@
         </div>
       </div>
       <h1>Join our mailing list</h1>
-      <p class="lede">Repair nights, donation drives, and events. Just your Northwestern email, one tap, done.</p>
+      <p class="lede">Get meeting and event updates as we refurbish computers for donation.</p>
 
       <form id="signup" novalidate>
         <label for="email">Northwestern email</label>
@@ -211,7 +226,7 @@
             id="email" name="email" type="email"
             inputmode="email" autocomplete="email" enterkeyhint="go"
             autocapitalize="off" autocorrect="off" spellcheck="false"
-            placeholder="yourname" required
+            placeholder="firstlast2029" required
           />
           <span class="suffix" id="suffix" aria-hidden="true">@u.northwestern.edu</span>
         </div>
@@ -239,7 +254,19 @@
     </section>
 
     <!-- Step 2: success -->
+    <!-- Branding sits above the success card -->
+    <div class="brand brand-outside" id="done-brand" hidden>
+      <img src="/icon.svg" alt="" />
+      <div>
+        <span class="wordmark"><span class="binary">Binary</span><span class="heart">Heart</span></span>
+        <span class="chapter">Northwestern <span class="chapter-word">Chapter</span></span>
+      </div>
+    </div>
     <section class="card done" id="done-view" hidden>
+      <button class="theme-toggle" type="button" aria-label="Switch to dark mode">
+        <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M21.752 15.002A9.72 9.72 0 0 1 18 15.75c-5.385 0-9.75-4.365-9.75-9.75 0-1.33.266-2.597.748-3.752A9.753 9.753 0 0 0 3 11.25C3 16.635 7.365 21 12.75 21a9.753 9.753 0 0 0 9.002-5.998Z"/></svg>
+        <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M12 3v2.25m6.364.386-1.591 1.591M21 12h-2.25m-.386 6.364-1.591-1.591M12 18.75V21m-4.773-4.227-1.591 1.591M5.25 12H3m4.227-4.773L5.636 5.636M15.75 12a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0Z"/></svg>
+      </button>
       <div class="check" id="done-check">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5"/></svg>
       </div>
@@ -251,7 +278,7 @@
         <a class="btn" id="fallback-mailto" href="#" hidden>Join by email</a>
         <a class="btn" id="cats-link" href="#" target="_blank" rel="noopener" hidden>Join us on Cats on Campus</a>
         <a class="btn secondary" href="https://instagram.com/binaryheartatnu" target="_blank" rel="noopener">Follow @binaryheartatnu</a>
-        <button class="btn secondary" id="another" type="button">Sign up someone else</button>
+        <button class="btn secondary" id="another" type="button">Sign up another email</button>
       </div>
     </section>
   </main>
@@ -297,17 +324,21 @@
       var defaultHint = hint.innerHTML;
 
       // ---- Light/dark toggle ----------------------------------------------
-      var themeToggle = $('theme-toggle');
+      var themeToggles = document.querySelectorAll('.theme-toggle');
       function applyTheme(t) {
         document.documentElement.setAttribute('data-theme', t);
         $('theme-color').setAttribute('content', t === 'dark' ? '#111827' : '#f7f8fb');
-        themeToggle.setAttribute('aria-label', t === 'dark' ? 'Switch to light mode' : 'Switch to dark mode');
+        themeToggles.forEach(function (b) {
+          b.setAttribute('aria-label', t === 'dark' ? 'Switch to light mode' : 'Switch to dark mode');
+        });
       }
       applyTheme(document.documentElement.getAttribute('data-theme') || 'light');
-      themeToggle.addEventListener('click', function () {
-        var next = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
-        applyTheme(next);
-        try { localStorage.setItem('bh-theme', next); } catch (e) {}
+      themeToggles.forEach(function (b) {
+        b.addEventListener('click', function () {
+          var next = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+          applyTheme(next);
+          try { localStorage.setItem('bh-theme', next); } catch (e) {}
+        });
       });
 
       // ---- Email helpers --------------------------------------------------
@@ -347,12 +378,45 @@
       function setHint(html, isError) {
         hint.innerHTML = html;
         hint.classList.toggle('err', !!isError);
+        hint.classList.remove('ok');
         field.classList.toggle('invalid', !!isError);
       }
+      // Once the keyboard is closed, shrink the text so a long name and the
+      // @u.northwestern.edu suffix both fit. Full size again while typing
+      // (below 16px, iOS zooms the page on focus).
+      function fitField() {
+        input.style.fontSize = '';
+        suffix.style.fontSize = '';
+        if (document.activeElement === input || !input.value) return;
+        for (var size = 17; input.scrollWidth > input.clientWidth && size >= 12; size--) {
+          input.style.fontSize = size + 'px';
+          suffix.style.fontSize = Math.min(16, size) + 'px';
+        }
+      }
+      input.addEventListener('focus', fitField);
+      input.addEventListener('blur', fitField);
+      window.addEventListener('resize', fitField);
+
+      var lastLen = 0;
       input.addEventListener('input', function () {
-        // Hide the fixed suffix once they start typing their own domain.
+        // A whole address arriving at once means AutoFill or paste.
+        var arrivedAtOnce = input.value.length - lastLen > 3;
+        // The box already shows @u.northwestern.edu, so drop it from what they
+        // entered and keep just the name part in the field.
+        var trimmed = input.value.trim().replace(/@u\.northwestern\.edu$/i, '');
+        if (trimmed !== input.value) input.value = trimmed;
+        lastLen = input.value.length;
+        // Hide the fixed suffix only if they're entering some other domain.
         suffix.hidden = input.value.indexOf('@') !== -1;
-        if (hint.classList.contains('err')) setHint(defaultHint, false);
+        // Close the keyboard (and iOS's selection menu) so Join is right there.
+        if (arrivedAtOnce && isNU(normalize(input.value))) {
+          input.blur();
+          fitField();
+          setHint('Looks good. Tap Join.', false);
+          hint.classList.add('ok');
+        } else if (hint.classList.contains('err') || hint.classList.contains('ok')) {
+          setHint(defaultHint, false);
+        }
       });
 
       // ---- Submit ---------------------------------------------------------
@@ -384,20 +448,23 @@
         cats.hidden = !CATS_ON_CAMPUS_URL;
         if (CATS_ON_CAMPUS_URL) cats.href = CATS_ON_CAMPUS_URL;
         var another = $('another');
-        another.hidden = !kiosk && !opts.returning;
-        another.textContent = kiosk ? 'Next person' : 'Use a different email';
+        another.hidden = false;
+        another.textContent = kiosk ? 'Next person' : 'Sign up another email';
         formView.hidden = true;
         doneView.hidden = false;
+        $('done-brand').hidden = false;
         // Tabling iPad: clear for the next person, unless something needs attention.
         if (kiosk && !opts.fallback) setTimeout(reset, 4000);
       }
 
       function reset() {
         form.reset();
+        lastLen = 0;
         suffix.hidden = false;
         setHint(defaultHint, false);
         setBusy(false);
         doneView.hidden = true;
+        $('done-brand').hidden = true;
         formView.hidden = false;
         if (!kiosk) { try { localStorage.removeItem(STORAGE_KEY); } catch (e) {} }
         input.focus();

@@ -6,7 +6,7 @@ import { BRAND_COLORS, NORTHWESTERN_COLORS } from '../../utils/brandColors';
 import { firstMeeting, isFirstMeetingUpcoming } from './firstMeeting';
 
 // Standalone signup page deployed from signup/ to Cloudflare Pages
-const NU_SIGNUP_URL = 'https://binaryheart-nu-join.pages.dev/';
+const NU_SIGNUP_URL = 'https://join.binaryheart.org/nu';
 
 export default function Join() {
   const showFirstMeeting = isFirstMeetingUpcoming();
@@ -107,6 +107,14 @@ export default function Join() {
                   </p>
                   <p className="mb-4">No experience necessary. We'll teach you everything you need to know!</p>
                   <div className="flex flex-col sm:flex-row justify-center gap-3">
+                    <a
+                      href={`${NU_SIGNUP_URL}?src=website`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className={`inline-flex items-center justify-center gap-2 rounded-lg bg-gradient-to-r ${BRAND_COLORS.BINARY_GRADIENT} px-5 py-2.5 text-sm font-semibold text-white shadow-md hover:opacity-90 transition-all duration-200`}
+                    >
+                      Join our mailing list
+                    </a>
                     <a
                       href={`mailto:${firstMeeting.email}`}
                       className={`inline-flex items-center justify-center gap-2 rounded-lg bg-gradient-to-r ${NORTHWESTERN_COLORS.GRADIENT_PRIMARY} px-5 py-2.5 text-sm font-semibold text-white shadow-md ${NORTHWESTERN_COLORS.GRADIENT_PRIMARY_HOVER} transition-all duration-200`}
@@ -313,7 +321,7 @@ export default function Join() {
                       Join Our Mailing List
                     </h3>
                     <p className="text-white/90 mb-6 text-sm sm:text-base">
-                      Get repair nights, donation drives, and events in your inbox. Just your Northwestern email and one tap.
+                      Get meeting and event updates in your inbox.
                     </p>
                     <a
                       href={`${NU_SIGNUP_URL}?src=website`}

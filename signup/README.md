@@ -5,7 +5,7 @@ A small, standalone signup site that collects Northwestern emails for the Binary
 ```
             ┌───────────── Web flow ─────────────┐
 Phone ──▶  signup page ──▶ /api/join (CF Pages Function) ──▶ Apps Script doPost ──▶ Google Sheet
-            └── "Join by email instead" ──▶ nu@binaryheart.org ──▶ Apps Script (every 5 min) ──┘
+            └── "Join by email instead" ──▶ nu@binaryheart.org ──▶ Apps Script (every minute) ──┘
 ```
 
 | Path | What it is |
@@ -20,7 +20,7 @@ Phone ──▶  signup page ──▶ /api/join (CF Pages Function) ──▶ A
 Every flow ends in the same Sheet and is deduplicated by email.
 
 1. **Web page, one field and one tap.** People type only the part before the @. `@u.northwestern.edu` is added for them, and a full address is also accepted. The page blocks non-Northwestern addresses and catches common typos (`u.northwestern.com` → "Did you mean…?"). It uses `autocomplete="email"`, so iOS/Android keyboards suggest the saved address, and `enterkeyhint="go"`, so the keyboard's Go key submits.
-2. **Pre-filled email.** The "Join by email instead" button opens the mail app with the recipient, subject, and body already filled in, so people only tap Send. The Apps Script checks the inbox every 5 minutes and adds the sender automatically.
+2. **Pre-filled email.** The "Join by email instead" button opens the mail app with the recipient, subject, and body already filled in, so people only tap Send. The Apps Script checks the inbox every minute and adds the sender automatically.
    - If they send from a personal account (common on iPhone, where Mail defaults to iCloud/Gmail), the script saves that address with the note *Needs Northwestern email* and replies once to ask for their Northwestern email. When they reply, their Northwestern address is picked up from the reply and added.
    - Direct mailto link for GroupMe, Instagram, and email:
      `mailto:nu@binaryheart.org?subject=Join%20the%20BinaryHeart%20NU%20mailing%20list&body=Hi%20BinaryHeart!%20Please%20add%20me%20to%20the%20Northwestern%20chapter%20mailing%20list.`
@@ -34,12 +34,12 @@ Add `?src=` so the Sheet shows where each signup came from:
 
 | Channel | Link |
 | --- | --- |
-| Flyers (QR code) | `https://binaryheart-nu-join.pages.dev/?src=flyer` |
-| Instagram bio / story link | `https://binaryheart-nu-join.pages.dev/?src=instagram` |
-| GroupMe | `https://binaryheart-nu-join.pages.dev/?src=groupme` |
-| Email blasts | `https://binaryheart-nu-join.pages.dev/?src=email` |
-| Tabling iPad | `https://binaryheart-nu-join.pages.dev/?kiosk` |
-| Main website (already linked from `/nu/join`) | `https://binaryheart-nu-join.pages.dev/?src=website` |
+| Flyers (QR code) | `https://join.binaryheart.org/nu?src=flyer` |
+| Instagram bio / story link | `https://join.binaryheart.org/nu?src=instagram` |
+| GroupMe | `https://join.binaryheart.org/nu?src=groupme` |
+| Email blasts | `https://join.binaryheart.org/nu?src=email` |
+| Tabling iPad | `https://join.binaryheart.org/nu?kiosk` |
+| Main website (already linked from `/nu/join`) | `https://join.binaryheart.org/nu?src=website` |
 
 ### iPhone-native options (no app needed)
 
@@ -61,7 +61,7 @@ App Clips could run the flow without opening Safari, but they need a published A
    - creates the `Signups` tab with headers,
    - creates the Gmail label *Mailing List Signup*,
    - generates a random `SIGNUP_SECRET` (printed in the **Execution log** at the bottom; copy it),
-   - installs a trigger that checks the inbox every 5 minutes.
+   - installs a trigger that checks the inbox every minute.
 5. **Deploy → New deployment → Web app**
    - Execute as: **Me**
    - Who has access: **Anyone**
@@ -86,19 +86,26 @@ On first run it creates the `binaryheart-nu-join` project (→ `binaryheart-nu-j
 
 Redeploy once after adding the variables.
 
-**Optional: shorter URL for flyers.** If `binaryheart.org` DNS is on Cloudflare, add a custom domain like `join.binaryheart.org` under **Custom domains**. Then update `NU_SIGNUP_URL` in `src/pages/nu/Join.tsx` and the links above.
+**Custom domain.** The project is on the `admin@binaryheart.org` Cloudflare account with the custom domain `join.binaryheart.org` (under **Custom domains**). The page itself is `public/nu.html`, served at `join.binaryheart.org/nu`; `public/_redirects` sends the bare domain (and old `pages.dev` links) to `/nu`. Another chapter could get its own page the same way (e.g. `public/iu.html` → `/iu`).
 
 ### 3. Optional tweaks
 
 - **Cats on Campus button.** Set `CATS_ON_CAMPUS_URL` near the top of the script in `public/index.html`. A "Join us on Cats on Campus" button then appears after signup.
-- **Confirmation emails.** `CONFIG.SEND_CONFIRMATION` in `Code.gs` (on by default). A short "you're on the list" email also helps people catch typos.
+- **Confirmation emails.** `CONFIG.SEND_CONFIRMATION` in `Code.gs` (on by default). The "you're on the list" email is styled like the chapter's other emails and helps people catch typos. It shows the first meeting from `src/data/chapters/nu/firstMeeting.json` (the same file `/nu/join` uses) until that date passes, and always links to `/nu/join` for current meeting times. Run `sendTestConfirmation` in the Apps Script editor to preview it in your inbox.
 - **Subject line.** If you change `MAILTO_SUBJECT` in `index.html`, change `CONFIG.MAILTO_SUBJECT` in `Code.gs` to match. The inbox scan searches for that subject.
+
+## Updating the Apps Script
+
+After changing `Code.gs`, paste the new version into the Apps Script editor and save. Then:
+
+1. Run `sendTestConfirmation` once. It sends a preview to your inbox and asks for any new permissions.
+2. Go to **Deploy → Manage deployments**, click the pencil on the web app, set **Version** to **New version**, and click **Deploy**. The web app keeps its URL, so Cloudflare needs no change.
 
 ## Testing after setup
 
 1. Open the page and submit your own Northwestern email. Within seconds a row appears in the Sheet with Method `web`.
 2. Submit the same email again. The page says "already on the list" and no new row is added.
-3. Tap **Join by email instead** and send it. Within 5 minutes a row appears with Method `email`, and the thread gets the *Mailing List Signup* label. To skip the wait, run `processMailtoSignups` by hand in Apps Script.
+3. Tap **Join by email instead** and send it. Within a minute or two a row appears with Method `email`, and the thread gets the *Mailing List Signup* label. To skip the wait, run `processMailtoSignups` by hand in Apps Script.
 
 ## Exporting for the real mailing list
 

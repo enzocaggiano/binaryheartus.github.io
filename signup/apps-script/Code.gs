@@ -22,7 +22,14 @@ const CONFIG = {
   // Send a short "you're on the list" email to each new signup.
   SEND_CONFIRMATION: true,
   INSTAGRAM_URL: 'https://instagram.com/binaryheartatnu',
-  TRIGGER_MINUTES: 5,
+  INSTAGRAM_HANDLE: '@binaryheartatnu',
+  JOIN_PAGE_URL: 'https://binaryheart.org/nu/join',
+  LOGO_URL: 'https://www.binaryheart.org/assets/images/chapters/national/icon.png',
+  // Same file the website's first-meeting section reads, so the email is never
+  // out of date with binaryheart.org/nu/join.
+  MEETING_JSON_URL: 'https://raw.githubusercontent.com/BinaryHeartUS/binaryheartus.github.io/main/src/data/chapters/nu/firstMeeting.json',
+  TIME_ZONE: 'America/Chicago',
+  TRIGGER_MINUTES: 1,
 };
 
 const HEADERS = ['Timestamp', 'Email', 'Northwestern', 'Method', 'Source', 'Notes'];
@@ -88,11 +95,22 @@ function doGet() {
 
 /** Time-driven: every CONFIG.TRIGGER_MINUTES minutes. Safe to run by hand. */
 function processMailtoSignups() {
+  processMail_({ silent: false });
+}
+
+/**
+ * Scans the inbox for join emails. Each message is handled exactly once (its ID
+ * is remembered), so deleting rows from the Sheet never causes a resend.
+ * silent: record signups without sending any emails.
+ */
+function processMail_({ silent }) {
   const props = PropertiesService.getScriptProperties();
+  const handled = new Set(JSON.parse(props.getProperty('HANDLED_MESSAGE_IDS') || '[]'));
   const since = Number(props.getProperty('LAST_MAIL_CHECK')) || Date.now() - 24 * 60 * 60 * 1000;
   const startedAt = Date.now();
 
-  // Overlap the window by 10 minutes; addSignup_ dedupes so reprocessing is harmless.
+  // Overlap the window by 10 minutes because Gmail search can lag on new mail.
+  // Messages seen in an earlier run are skipped via their remembered IDs.
   const afterSeconds = Math.floor((since - 10 * 60 * 1000) / 1000);
   const query = `subject:"${CONFIG.MAILTO_SUBJECT}" after:${afterSeconds} -in:sent -in:drafts`;
   const label = GmailApp.getUserLabelByName(CONFIG.PROCESSED_LABEL) || GmailApp.createLabel(CONFIG.PROCESSED_LABEL);
@@ -101,6 +119,8 @@ function processMailtoSignups() {
   GmailApp.search(query, 0, 100).forEach(thread => {
     thread.getMessages().forEach(message => {
       if (message.getDate().getTime() < since - 10 * 60 * 1000) return;
+      if (handled.has(message.getId())) return;
+      handled.add(message.getId());
       const from = extractAddress_(message.getFrom());
       if (!from) return;
       const fromUs = me.indexOf(from) !== -1;
@@ -117,14 +137,25 @@ function processMailtoSignups() {
 
       if (nuEmail) {
         const result = addSignup_(nuEmail, 'email', 'mailto', nuEmail === from ? '' : `Sent from ${from}`);
-        if (result.added && CONFIG.SEND_CONFIRMATION && !fromUs) {
-          message.reply(confirmationText_(nuEmail), { name: CONFIG.CHAPTER_NAME });
+        // Also keep the address they actually sent from (e.g. a personal @me.com).
+        const sender = !fromUs && from !== nuEmail
+          ? addSignup_(from, 'email', 'mailto', `Sender address; Northwestern email is ${nuEmail}`)
+          : { added: false };
+        // Confirm whenever this email added anyone, so someone already signed up
+        // on the web still hears back when they email from a new address.
+        if ((result.added || sender.added) && CONFIG.SEND_CONFIRMATION && !fromUs && !silent) {
+          const meeting = getUpcomingMeeting_();
+          message.reply(confirmationText_(nuEmail, meeting), {
+            name: CONFIG.CHAPTER_NAME,
+            htmlBody: confirmationHtml_(nuEmail, meeting),
+          });
         }
       } else {
         // Keep the address so nobody is lost, and ask once for their Northwestern email.
         const result = addSignup_(from, 'email', 'mailto', 'Needs Northwestern email');
-        if (result.added) {
-          message.reply(needsNuEmailText_(), { name: CONFIG.CHAPTER_NAME });
+        if (result.added && !silent) {
+          const meeting = getUpcomingMeeting_();
+          message.reply(needsNuEmailText_(meeting), { name: CONFIG.CHAPTER_NAME, htmlBody: needsNuEmailHtml_(meeting) });
         }
       }
     });
@@ -132,6 +163,20 @@ function processMailtoSignups() {
   });
 
   props.setProperty('LAST_MAIL_CHECK', String(startedAt));
+  // Keep the most recent IDs; property values max out around 9 KB.
+  props.setProperty('HANDLED_MESSAGE_IDS', JSON.stringify([...handled].slice(-300)));
+}
+
+/**
+ * Run once by hand to re-scan the last 7 days of join emails into the Sheet,
+ * e.g. after changing what gets recorded. Sends no emails, so nobody hears
+ * from us twice. Rows already in the Sheet are skipped.
+ */
+function reprocessLastWeek() {
+  const props = PropertiesService.getScriptProperties();
+  props.setProperty('LAST_MAIL_CHECK', String(Date.now() - 7 * 24 * 60 * 60 * 1000));
+  props.deleteProperty('HANDLED_MESSAGE_IDS');
+  processMail_({ silent: true });
 }
 
 /* ------------------------------------------------------------------------ */
@@ -183,32 +228,215 @@ function latestReplyText_(body) {
 }
 
 function sendConfirmation_(email) {
-  GmailApp.sendEmail(email, "You're on the BinaryHeart Northwestern list", confirmationText_(email), {
+  const meeting = getUpcomingMeeting_();
+  GmailApp.sendEmail(email, "You're on the BinaryHeart Northwestern list", confirmationText_(email, meeting), {
     name: CONFIG.CHAPTER_NAME,
     replyTo: CONFIG.CHAPTER_ADDRESS,
+    htmlBody: confirmationHtml_(email, meeting),
   });
 }
 
-function confirmationText_(email) {
-  return [
-    `You're on the list! We'll send BinaryHeart Northwestern updates to ${email}.`,
-    '',
-    'We meet Monday, Wednesday, and Friday, 3:30–5:00 PM at the BinaryHeart Space on Orrington Ave. Drop in anytime, no experience needed.',
-    '',
-    `Follow us on Instagram: ${CONFIG.INSTAGRAM_URL}`,
-    '',
-    `– ${CONFIG.CHAPTER_NAME}`,
-  ].join('\n');
+/**
+ * Run from the editor to preview the confirmation email in your own inbox.
+ * The first run also asks for the permission to read the meeting info.
+ */
+function sendTestConfirmation() {
+  CacheService.getScriptCache().remove('meeting');
+  const me = Session.getEffectiveUser().getEmail();
+  const meeting = getUpcomingMeeting_();
+  GmailApp.sendEmail(me, "[Test] You're on the BinaryHeart Northwestern list", confirmationText_(me, meeting), {
+    name: CONFIG.CHAPTER_NAME,
+    replyTo: CONFIG.CHAPTER_ADDRESS,
+    htmlBody: confirmationHtml_('yourname2029@u.northwestern.edu', meeting),
+  });
+  Logger.log('Sent test to %s. Meeting shown: %s', me, meeting ? meeting.displayDate : 'none (link only)');
 }
 
-function needsNuEmailText_() {
-  return [
+/** The website's first meeting if it hasn't happened yet (Chicago time), else null. */
+function getUpcomingMeeting_() {
+  const cache = CacheService.getScriptCache();
+  let raw = cache.get('meeting');
+  if (!raw) {
+    try {
+      const res = UrlFetchApp.fetch(CONFIG.MEETING_JSON_URL, { muteHttpExceptions: true });
+      if (res.getResponseCode() !== 200) return null;
+      raw = res.getContentText();
+      cache.put('meeting', raw, 60 * 60);
+    } catch (err) {
+      console.error('Could not load meeting info:', err);
+      return null;
+    }
+  }
+  try {
+    const meeting = JSON.parse(raw);
+    const today = Utilities.formatDate(new Date(), CONFIG.TIME_ZONE, 'yyyy-MM-dd');
+    return meeting.date && today <= meeting.date ? meeting : null;
+  } catch (err) {
+    return null;
+  }
+}
+
+function confirmationText_(email, meeting) {
+  const lines = [
+    `You're on the list! We'll send BinaryHeart Northwestern updates to ${email}.`,
+    '',
+  ];
+  if (meeting) {
+    lines.push(
+      `${meeting.title}: ${meeting.subtitle}`,
+      `${meeting.displayDate}, ${meeting.time}`,
+      `${meeting.locationName}, ${meeting.address}`,
+      'Drop in anytime. No experience needed.',
+      '',
+    );
+  }
+  lines.push(
+    `When and where we meet: ${CONFIG.JOIN_PAGE_URL}`,
+    `Instagram: ${CONFIG.INSTAGRAM_URL}`,
+    '',
+    'Questions? Just reply to this email. Reply "unsubscribe" anytime to be removed.',
+    '',
+    `– ${CONFIG.CHAPTER_NAME}`,
+  );
+  return lines.join('\n');
+}
+
+/** Styled to match the chapter's other emails (Lexend, BinaryHeart blue/red, NU purple). */
+function confirmationHtml_(email, meeting) {
+  const font = "font-family: 'Lexend', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;";
+  const link = 'color: #2F4A70; text-decoration: none; font-weight: 500;';
+  const wordmark = '<span style="color: #2F4A70;">Binary</span><span style="color: #FF0040;">Heart</span>';
+  const e = escapeHtml_;
+
+
+  return `
+<link href="https://fonts.googleapis.com/css2?family=Lexend:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+<div style="text-align: center; margin: 30px 0;">
+  <img src="${CONFIG.LOGO_URL}" alt="BinaryHeart Logo" style="max-width: 115px; height: auto; display: block; margin: 0 auto;">
+</div>
+
+<h1 style="${font} color: #333333; text-align: center;"><strong>You're on the ${wordmark} at <span style="color: #4e2a84;">Northwestern</span> list!</strong></h1>
+
+<div style="${font} font-size: 14px; line-height: 1.6; max-width: 800px; margin: 0 auto; padding: 0 20px;">
+
+  <p style="margin: 20px 0;">Thanks for joining! We'll send meeting and event updates to <strong>${e(email)}</strong>.</p>
+${meetingBlocksHtml_(meeting, 'red')}
+
+  <div style="background-color: #f6f2fb; border-radius: 8px; padding: 25px; margin: 30px 0; border-left: 4px solid #4e2a84;">
+    <h2 style="${font} color: #4e2a84; margin: 0 0 15px 0; font-size: 20px; font-weight: 600;">Questions?</h2>
+    <hr style="border: none; height: 1px; background-color: #dee2e6; margin: 15px 0;">
+    <p style="margin: 15px 0;">Just reply to this email. We're happy to help!</p>
+  </div>
+
+  <div style="background-color: #ffffff; border-radius: 8px; padding: 25px; margin: 30px 0; border: 1px solid #dee2e6; text-align: center;">
+    <p style="margin: 15px 0; font-size: 16px;"><strong>Follow us on Instagram <a href="${CONFIG.INSTAGRAM_URL}" style="${link}">${CONFIG.INSTAGRAM_HANDLE}</a> for updates and behind-the-scenes content!</strong></p>
+  </div>
+
+  <div style="margin: 30px 0; padding: 20px 0; border-top: 2px solid #dee2e6;">
+    <p style="margin: 5px 0;"><strong>See you soon,</strong></p>
+    <p style="margin: 5px 0; color: #000000; font-weight: 600;"><strong>${wordmark} at <span style="color: #4e2a84;">Northwestern</span></strong></p>
+    <p style="margin: 5px 0; color: #666;"><a href="mailto:${CONFIG.CHAPTER_ADDRESS}" style="${link}">${CONFIG.CHAPTER_ADDRESS}</a></p>
+    <p style="margin: 15px 0 0 0; color: #999; font-size: 12px;">Don't want these emails? Reply "unsubscribe" and we'll remove you.</p>
+  </div>
+
+</div>`;
+}
+
+/**
+ * First-meeting box (while it's upcoming) plus the "See meeting times" button.
+ * Shared by both emails. accent picks the meeting box color so it never sits
+ * right under another red box.
+ */
+function meetingBlocksHtml_(meeting, accent) {
+  const c = accent === 'blue'
+    ? { bg: '#f0f8ff', line: '#2F4A70' }
+    : { bg: '#fff5f5', line: '#FF0040' };
+  const font = "font-family: 'Lexend', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;";
+  const link = 'color: #2F4A70; text-decoration: none; font-weight: 500;';
+  const e = escapeHtml_;
+  const meetingSection = meeting ? `
+    <div style="background-color: ${c.bg}; border-radius: 8px; padding: 25px; margin: 30px 0; border-left: 4px solid ${c.line};">
+      <h2 style="${font} color: ${c.line}; margin: 0 0 15px 0; font-size: 20px; font-weight: 600;">${e(meeting.title)}</h2>
+      <hr style="border: none; height: 1px; background-color: #dee2e6; margin: 15px 0;">
+      <p style="margin: 15px 0;"><strong>${e(meeting.subtitle)}</strong></p>
+      <p style="margin: 15px 0;">
+        <strong>When:</strong> ${e(meeting.displayDate)}, ${e(meeting.time)}<br>
+        <strong>Where:</strong> ${e(meeting.locationName)}, <a href="${e(meeting.mapUrl)}" style="${link}">${e(meeting.address)}</a>
+      </p>
+      <p style="margin: 15px 0;">Drop in anytime during those hours. No experience needed, we'll teach you everything!</p>
+    </div>` : '';
+
+  return `${meetingSection}
+  <div style="background-color: #f0f8ff; border-radius: 8px; padding: 25px; margin: 30px 0; border-left: 4px solid #2F4A70;">
+    <h2 style="${font} color: #2F4A70; margin: 0 0 15px 0; font-size: 20px; font-weight: 600;">When We Meet</h2>
+    <hr style="border: none; height: 1px; background-color: #dee2e6; margin: 15px 0;">
+    <p style="margin: 15px 0;">Our latest meeting times and directions to the BinaryHeart Space are always on our website.</p>
+    <p style="margin: 20px 0 5px 0;"><a href="${CONFIG.JOIN_PAGE_URL}" style="${font} display: inline-block; background-color: #FF0040; color: #ffffff; text-decoration: none; font-weight: 600; padding: 12px 22px; border-radius: 8px;">See meeting times</a></p>
+  </div>
+`;
+}
+
+/** Same look as the confirmation: asks people who emailed from a personal address for their Northwestern one. */
+function needsNuEmailHtml_(meeting) {
+  const font = "font-family: 'Lexend', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;";
+  const link = 'color: #2F4A70; text-decoration: none; font-weight: 500;';
+  const wordmark = '<span style="color: #2F4A70;">Binary</span><span style="color: #FF0040;">Heart</span>';
+  return `
+<link href="https://fonts.googleapis.com/css2?family=Lexend:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+<div style="text-align: center; margin: 30px 0;">
+  <img src="${CONFIG.LOGO_URL}" alt="BinaryHeart Logo" style="max-width: 115px; height: auto; display: block; margin: 0 auto;">
+</div>
+
+<h1 style="${font} color: #333333; text-align: center;"><strong>Thanks for joining ${wordmark} at <span style="color: #4e2a84;">Northwestern</span>!</strong></h1>
+
+<div style="${font} font-size: 14px; line-height: 1.6; max-width: 800px; margin: 0 auto; padding: 0 20px;">
+
+  <div style="background-color: #f6f2fb; border-radius: 8px; padding: 25px; margin: 30px 0; border-left: 4px solid #4e2a84;">
+    <h2 style="${font} color: #4e2a84; margin: 0 0 15px 0; font-size: 20px; font-weight: 600;">One Quick Thing</h2>
+    <hr style="border: none; height: 1px; background-color: #dee2e6; margin: 15px 0;">
+    <p style="margin: 15px 0;"><strong>Reply to this email with your @u.northwestern.edu address</strong> so we can add you to our Cats on Campus page too. Northwestern only lets us add Northwestern emails.</p>
+    <p style="margin: 15px 0;">That's it. We'll confirm once you're added.</p>
+  </div>
+${meetingBlocksHtml_(meeting, 'red')}
+
+  <div style="background-color: #ffffff; border-radius: 8px; padding: 25px; margin: 30px 0; border: 1px solid #dee2e6; text-align: center;">
+    <p style="margin: 15px 0; font-size: 16px;"><strong>Follow us on Instagram <a href="${CONFIG.INSTAGRAM_URL}" style="${link}">${CONFIG.INSTAGRAM_HANDLE}</a> for updates and behind-the-scenes content!</strong></p>
+  </div>
+
+  <div style="margin: 30px 0; padding: 20px 0; border-top: 2px solid #dee2e6;">
+    <p style="margin: 5px 0;"><strong>Thanks,</strong></p>
+    <p style="margin: 5px 0; color: #000000; font-weight: 600;"><strong>${wordmark} at <span style="color: #4e2a84;">Northwestern</span></strong></p>
+    <p style="margin: 5px 0; color: #666;"><a href="mailto:${CONFIG.CHAPTER_ADDRESS}" style="${link}">${CONFIG.CHAPTER_ADDRESS}</a></p>
+  </div>
+
+</div>`;
+}
+
+function escapeHtml_(value) {
+  return String(value == null ? '' : value)
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+
+function needsNuEmailText_(meeting) {
+  const lines = [
     'Thanks for joining BinaryHeart at Northwestern!',
     '',
     'One quick thing: reply with your @u.northwestern.edu email so we can add you to our Cats on Campus page too. (Northwestern only lets us add Northwestern emails.)',
     '',
-    `– ${CONFIG.CHAPTER_NAME}`,
-  ].join('\n');
+  ];
+  if (meeting) {
+    lines.push(
+      `${meeting.title}: ${meeting.subtitle}`,
+      `${meeting.displayDate}, ${meeting.time}`,
+      `${meeting.locationName}, ${meeting.address}`,
+      'Drop in anytime. No experience needed.',
+      '',
+    );
+  }
+  lines.push(`When and where we meet: ${CONFIG.JOIN_PAGE_URL}`, '', `– ${CONFIG.CHAPTER_NAME}`);
+  return lines.join('\n');
 }
 
 function json_(obj) {
