@@ -289,7 +289,7 @@ function confirmationText_(email, meeting) {
       `${meeting.title}: ${meeting.subtitle}`,
       `${meeting.displayDate}, ${meeting.time}`,
       `${meeting.locationName}, ${meeting.address}`,
-      'Drop in anytime. No experience needed.',
+      `Drop in anytime between ${meeting.dropInWindow}. No prior experience required. We'll teach you computer refurbishment, software installation, and hardware troubleshooting.`,
       '',
     );
   }
@@ -369,7 +369,7 @@ function meetingBlocksHtml_(meeting, accent) {
         <strong>When:</strong> ${e(meeting.displayDate)}, ${e(meeting.time)}<br>
         <strong>Where:</strong> ${e(meeting.locationName)}, <a href="${e(meeting.mapUrl)}" style="${link}">${e(meeting.address)}</a>
       </p>
-      <p style="margin: 15px 0;">Drop in anytime during those hours. No experience needed, we'll teach you everything!</p>
+      <p style="margin: 15px 0;">Drop in anytime between ${e(meeting.dropInWindow)}. No prior experience required. We'll teach you everything you need to know about computer refurbishment, software installation, and hardware troubleshooting.</p>
     </div>` : '';
 
   return `${meetingSection}
@@ -438,7 +438,7 @@ function needsNuEmailText_(meeting) {
       `${meeting.title}: ${meeting.subtitle}`,
       `${meeting.displayDate}, ${meeting.time}`,
       `${meeting.locationName}, ${meeting.address}`,
-      'Drop in anytime. No experience needed.',
+      `Drop in anytime between ${meeting.dropInWindow}. No prior experience required. We'll teach you computer refurbishment, software installation, and hardware troubleshooting.`,
       '',
     );
   }
