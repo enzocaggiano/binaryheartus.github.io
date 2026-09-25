@@ -162,7 +162,7 @@ export default function Join() {
                   <div className="text-center">
                     <p className="text-base sm:text-lg font-bold mb-1">BinaryHeart Space</p>
                     <a 
-                      href="https://maps.app.goo.gl/L545szRTfoJvYsrR7"
+                      href="https://maps.app.goo.gl/7UAMTC36M6UMPhax6"
                       target="_blank"
                       rel="noopener noreferrer"
                       className="text-sm sm:text-base text-white/90 hover:text-white underline"
