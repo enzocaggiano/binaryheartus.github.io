@@ -5,6 +5,9 @@ import BinaryHeartText from '../../components/BinaryHeartText';
 import { BRAND_COLORS, NORTHWESTERN_COLORS } from '../../utils/brandColors';
 import { firstMeeting, isFirstMeetingUpcoming } from './firstMeeting';
 
+// Standalone signup page deployed from signup/ to Cloudflare Pages
+const NU_SIGNUP_URL = 'https://binaryheart-nu-join.pages.dev/';
+
 export default function Join() {
   const showFirstMeeting = isFirstMeetingUpcoming();
 
@@ -295,6 +298,38 @@ export default function Join() {
             </div>
 
             <div className="space-y-6">
+              {/* Mailing List Signup (hosted separately on Cloudflare Pages, see signup/README.md) */}
+              <div id="mailing-list" className={`relative rounded-2xl bg-gradient-to-br ${BRAND_COLORS.BINARY_GRADIENT} backdrop-blur-sm p-6 sm:p-8 shadow-xl text-white`}>
+                <div className="flex flex-col sm:flex-row items-start gap-4 sm:gap-6">
+                  <div className="flex-shrink-0">
+                    <div className="flex h-14 w-14 items-center justify-center rounded-xl bg-white/20 backdrop-blur-sm">
+                      <svg className="h-7 w-7" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75" />
+                      </svg>
+                    </div>
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <h3 className="text-xl sm:text-2xl font-semibold mb-3">
+                      Join Our Mailing List
+                    </h3>
+                    <p className="text-white/90 mb-6 text-sm sm:text-base">
+                      Get repair nights, donation drives, and events in your inbox. Just your Northwestern email and one tap.
+                    </p>
+                    <a
+                      href={`${NU_SIGNUP_URL}?src=website`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="group inline-flex items-center gap-2 rounded-xl bg-white px-5 sm:px-6 py-2.5 sm:py-3 text-sm sm:text-base font-semibold text-gray-900 shadow-lg transition-all duration-300 hover:scale-105 hover:shadow-xl"
+                    >
+                      <span>Sign Up</span>
+                      <svg className="h-4 w-4 sm:h-5 sm:w-5 transition-transform duration-300 group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
+                      </svg>
+                    </a>
+                  </div>
+                </div>
+              </div>
+
               {/* Instagram Follow */}
               <div className={`relative rounded-2xl bg-gradient-to-br ${NORTHWESTERN_COLORS.GRADIENT_PRIMARY_90} backdrop-blur-sm p-6 sm:p-8 shadow-xl text-white`}>
                 <div className="flex flex-col sm:flex-row items-start gap-4 sm:gap-6">
