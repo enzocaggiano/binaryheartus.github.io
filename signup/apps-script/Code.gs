@@ -25,6 +25,9 @@ const CONFIG = {
   INSTAGRAM_HANDLE: '@binaryheartatnu',
   JOIN_PAGE_URL: 'https://binaryheart.org/nu/join',
   CATS_ON_CAMPUS_URL: 'https://catsoncampus.northwestern.edu/binaryheart/club_signup',
+  // How the emails describe the first meeting (date, time and place come from firstMeeting.json).
+  FIRST_MEETING_SUBTITLE: 'Intro to BinaryHeart: Hardware & Software',
+  FIRST_MEETING_BLURB: 'Meet the team and see the work we do on both sides: hardware, where we repair and refurbish computers for donation, and software, where we build our OpenClaw cluster and other internal tools.',
   LOGO_URL: 'https://www.binaryheart.org/assets/images/chapters/national/icon.png',
   // Same file the website's first-meeting section reads, so the email is never
   // out of date with binaryheart.org/nu/join.
@@ -286,10 +289,11 @@ function confirmationText_(email, meeting) {
   ];
   if (meeting) {
     lines.push(
-      `${meeting.title}: ${meeting.subtitle}`,
+      `${meeting.title}: ${CONFIG.FIRST_MEETING_SUBTITLE}`,
+      CONFIG.FIRST_MEETING_BLURB,
       `${meeting.displayDate}, ${meeting.time}`,
       `${meeting.locationName}, ${meeting.address}`,
-      `Drop in anytime between ${meeting.dropInWindow}. No prior experience required. We'll teach you computer refurbishment, software installation, and hardware troubleshooting.`,
+      `Drop in anytime between ${meeting.dropInWindow}. No prior experience required.`,
       '',
     );
   }
@@ -364,12 +368,13 @@ function meetingBlocksHtml_(meeting, accent) {
     <div style="background-color: ${c.bg}; border-radius: 8px; padding: 25px; margin: 30px 0; border-left: 4px solid ${c.line};">
       <h2 style="${font} color: ${c.line}; margin: 0 0 15px 0; font-size: 20px; font-weight: 600;">${e(meeting.title)}</h2>
       <hr style="border: none; height: 1px; background-color: #dee2e6; margin: 15px 0;">
-      <p style="margin: 15px 0;"><strong>${e(meeting.subtitle)}</strong></p>
+      <p style="margin: 15px 0;"><strong>${e(CONFIG.FIRST_MEETING_SUBTITLE)}</strong></p>
+      <p style="margin: 15px 0;">${e(CONFIG.FIRST_MEETING_BLURB)}</p>
       <p style="margin: 15px 0;">
         <strong>When:</strong> ${e(meeting.displayDate)}, ${e(meeting.time)}<br>
         <strong>Where:</strong> ${e(meeting.locationName)}, <a href="${e(meeting.mapUrl)}" style="${link}">${e(meeting.address)}</a>
       </p>
-      <p style="margin: 15px 0;">Drop in anytime between ${e(meeting.dropInWindow)}. No prior experience required. We'll teach you everything you need to know about computer refurbishment, software installation, and hardware troubleshooting.</p>
+      <p style="margin: 15px 0;">Drop in anytime between ${e(meeting.dropInWindow)}. No prior experience required.</p>
     </div>` : '';
 
   return `${meetingSection}
@@ -435,10 +440,11 @@ function needsNuEmailText_(meeting) {
   ];
   if (meeting) {
     lines.push(
-      `${meeting.title}: ${meeting.subtitle}`,
+      `${meeting.title}: ${CONFIG.FIRST_MEETING_SUBTITLE}`,
+      CONFIG.FIRST_MEETING_BLURB,
       `${meeting.displayDate}, ${meeting.time}`,
       `${meeting.locationName}, ${meeting.address}`,
-      `Drop in anytime between ${meeting.dropInWindow}. No prior experience required. We'll teach you computer refurbishment, software installation, and hardware troubleshooting.`,
+      `Drop in anytime between ${meeting.dropInWindow}. No prior experience required.`,
       '',
     );
   }
