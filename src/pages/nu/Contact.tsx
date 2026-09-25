@@ -105,14 +105,14 @@ export default function Contact() {
                       </div>
                       <div>
                         <p className="text-sm font-semibold text-gray-900">Weekly Meetings</p>
-                        <p className="text-gray-600">Monday, Wednesday, and Friday, 3:30-5:00 PM</p>
+                        <p className="text-gray-600">Fall 2026 schedule TBA (set based on member availability, will be announced Sunday, October 11th)</p>
                         <a
-                          href="https://maps.app.goo.gl/J3xPJzFdN3vJDWWZ9"
+                          href="https://maps.app.goo.gl/7UAMTC36M6UMPhax6"
                           target="_blank"
                           rel="noopener noreferrer"
                           className={`${NORTHWESTERN_COLORS.TEXT} ${NORTHWESTERN_COLORS.TEXT_HOVER}`}
                         >
-                          Orrington Ave, Evanston
+                          1910 Orrington Ave, Evanston
                         </a>
                       </div>
                     </div>

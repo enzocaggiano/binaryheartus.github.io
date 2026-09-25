@@ -2,9 +2,12 @@ import { Link } from 'react-router-dom';
 import InfoCard from '../../components/InfoCard';
 import WhyJoin from '../../components/WhyJoin';
 import BinaryHeartText from '../../components/BinaryHeartText';
-import { NORTHWESTERN_COLORS } from '../../utils/brandColors';
+import { BRAND_COLORS, NORTHWESTERN_COLORS } from '../../utils/brandColors';
+import { firstMeeting, isFirstMeetingUpcoming } from './firstMeeting';
 
 export default function Join() {
+  const showFirstMeeting = isFirstMeetingUpcoming();
+
   return (
     <main className="grow relative z-10">
       {/* Hero Section */}
@@ -20,6 +23,109 @@ export default function Join() {
           </div>
         </div>
       </div>
+
+      {/* First Meeting - shown until the day after the meeting */}
+      {showFirstMeeting && (
+        <div id="first-meeting" className="py-8 sm:py-12">
+          <div className="mx-auto max-w-7xl px-6 lg:px-8">
+            <div className="mx-auto max-w-4xl rounded-2xl bg-white/80 backdrop-blur-sm p-6 sm:p-8 lg:p-12 shadow-xl ring-1 ring-gray-900/5">
+              <div className="text-center mb-8">
+                <span className={`inline-block rounded-full ${NORTHWESTERN_COLORS.BG_LIGHT} px-3 py-1 text-xs font-semibold uppercase tracking-wide ${NORTHWESTERN_COLORS.TEXT} mb-4`}>
+                  {firstMeeting.title}
+                </span>
+                <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-3">{firstMeeting.subtitle}</h2>
+                <p className="text-base sm:text-lg text-gray-600">
+                  Join <BinaryHeartText binaryColor={BRAND_COLORS.BINARY_TEXT} heartColor={BRAND_COLORS.HEART_TEXT} /> at Northwestern for our first meeting of the 2026-2027 academic year. Open to all!
+                </p>
+              </div>
+
+              <div className="grid gap-4 sm:gap-6 sm:grid-cols-2 mb-8">
+                <div className={`flex items-start gap-4 rounded-xl ${NORTHWESTERN_COLORS.BG_50} p-4 sm:p-6`}>
+                  <div className={`flex h-10 w-10 sm:h-12 sm:w-12 flex-shrink-0 items-center justify-center rounded-xl ${NORTHWESTERN_COLORS.BG_LIGHT}`}>
+                    <svg className={`h-5 w-5 sm:h-6 sm:w-6 ${NORTHWESTERN_COLORS.TEXT}`} fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5" />
+                    </svg>
+                  </div>
+                  <div>
+                    <p className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-1">Date & Time</p>
+                    <p className="text-base sm:text-lg font-bold text-gray-900">{firstMeeting.displayDate}</p>
+                    <p className="text-sm sm:text-base text-gray-600">{firstMeeting.time}</p>
+                  </div>
+                </div>
+
+                <div className={`flex items-start gap-4 rounded-xl ${NORTHWESTERN_COLORS.BG_50} p-4 sm:p-6`}>
+                  <div className={`flex h-10 w-10 sm:h-12 sm:w-12 flex-shrink-0 items-center justify-center rounded-xl ${NORTHWESTERN_COLORS.BG_LIGHT}`}>
+                    <svg className={`h-5 w-5 sm:h-6 sm:w-6 ${NORTHWESTERN_COLORS.TEXT}`} fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z" />
+                    </svg>
+                  </div>
+                  <div>
+                    <p className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-1">Location</p>
+                    <p className="text-base sm:text-lg font-bold text-gray-900">{firstMeeting.locationName}</p>
+                    <a
+                      href={firstMeeting.mapUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className={`text-sm sm:text-base ${NORTHWESTERN_COLORS.TEXT} ${NORTHWESTERN_COLORS.TEXT_HOVER} underline`}
+                    >
+                      {firstMeeting.address}
+                    </a>
+                  </div>
+                </div>
+              </div>
+
+              <div className="space-y-6 text-sm sm:text-base text-gray-600">
+                <div>
+                  <h3 className="text-lg sm:text-xl font-semibold text-gray-900 mb-2">Workshop Focus</h3>
+                  <p>
+                    Learn computer repair skills to refurbish devices for donation to underserved groups. This hands-on workshop will teach you practical techniques for fixing and upgrading computers while making a positive impact in our community.
+                  </p>
+                </div>
+
+                <div>
+                  <h3 className="text-lg sm:text-xl font-semibold text-gray-900 mb-2">Getting There</h3>
+                  <p className="mb-3">
+                    Our space is on Orrington Avenue, directly across from the Foster-Walker Complex, at the house with the front screened porch (to the right of the blue house, or two houses to the right of the apartment building on the corner of Orrington and Emerson). To get to our space:
+                  </p>
+                  <ol className="list-decimal space-y-1 pl-5 mb-3">
+                    <li>Go to the front of the house.</li>
+                    <li>Take the pathway that runs along the right side of the house.</li>
+                    <li>Enter the side door and take the stairs to your right and you'll be in the space. Someone from exec will welcome you and help get you onboarded!</li>
+                  </ol>
+                  <p>
+                    We will monitor our Instagram and email throughout all meetings, so don't hesitate to reach out through either channel if you have any trouble finding us. We are here to help!
+                  </p>
+                </div>
+
+                <div className={`rounded-xl bg-gradient-to-br ${NORTHWESTERN_COLORS.GRADIENT_LIGHT} p-4 sm:p-6 text-center`}>
+                  <p className="text-gray-900 font-semibold mb-1">
+                    Drop in anytime between {firstMeeting.dropInWindow} on {firstMeeting.displayDate}.
+                  </p>
+                  <p className="mb-4">No experience necessary. We'll teach you everything you need to know!</p>
+                  <div className="flex flex-col sm:flex-row justify-center gap-3">
+                    <a
+                      href={`mailto:${firstMeeting.email}`}
+                      className={`inline-flex items-center justify-center gap-2 rounded-lg bg-gradient-to-r ${NORTHWESTERN_COLORS.GRADIENT_PRIMARY} px-5 py-2.5 text-sm font-semibold text-white shadow-md ${NORTHWESTERN_COLORS.GRADIENT_PRIMARY_HOVER} transition-all duration-200`}
+                    >
+                      Email {firstMeeting.email}
+                    </a>
+                    <a
+                      href={`https://instagram.com/${firstMeeting.instagram}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center justify-center gap-2 rounded-lg bg-white px-5 py-2.5 text-sm font-semibold text-gray-900 shadow-md ring-1 ring-gray-900/10 hover:bg-gray-50 transition-all duration-200"
+                    >
+                      DM @{firstMeeting.instagram}
+                    </a>
+                  </div>
+                  <p className="mt-4 text-gray-900 font-medium">We're looking forward to seeing everyone!</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Meeting Information - Prominent Section */}
       <div className="py-8 sm:py-12">
@@ -41,8 +147,8 @@ export default function Join() {
                     </svg>
                   </div>
                   <div className="text-center">
-                    <p className="text-base sm:text-lg font-bold mb-1">Monday, Wednesday, and Friday</p>
-                    <p className="text-sm sm:text-base text-white/90">3:30 PM - 5:00 PM</p>
+                    <p className="text-base sm:text-lg font-bold mb-1">Fall 2026 Schedule TBA</p>
+                    <p className="text-sm sm:text-base text-white/90">Set based on the availability of interested members, will be announced Sunday, October 11th</p>
                   </div>
                 </div>
 
@@ -56,12 +162,12 @@ export default function Join() {
                   <div className="text-center">
                     <p className="text-base sm:text-lg font-bold mb-1">BinaryHeart Space</p>
                     <a 
-                      href="https://maps.app.goo.gl/L545szRTfoJvYsrR7"
+                      href="https://maps.app.goo.gl/7UAMTC36M6UMPhax6"
                       target="_blank"
                       rel="noopener noreferrer"
                       className="text-sm sm:text-base text-white/90 hover:text-white underline"
                     >
-                      Orrington Ave, Evanston
+                      1910 Orrington Ave, Evanston
                     </a>
                   </div>
                 </div>

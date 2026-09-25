@@ -3,8 +3,10 @@ import StatsGrid from '../../components/StatsGrid';
 import BinaryHeartText from '../../components/BinaryHeartText';
 import { BRAND_COLORS, NORTHWESTERN_COLORS } from '../../utils/brandColors';
 import WhatWeDo from '../../components/WhatWeDo';
+import { firstMeeting, isFirstMeetingUpcoming } from './firstMeeting';
 
 export default function Home() {
+  const showFirstMeeting = isFirstMeetingUpcoming();
 
   return (
     <main className="grow relative z-10">
@@ -67,10 +69,20 @@ export default function Home() {
         <div className="mx-auto max-w-7xl px-6 lg:px-8">
           <div className="mx-auto max-w-3xl">
             <div className="rounded-2xl bg-white/80 backdrop-blur-sm p-8 shadow-xl ring-1 ring-gray-900/5">
-              <div className="text-center mb-6">
-                <h2 className="text-3xl font-bold text-gray-900 mb-2">Join Us This Week</h2>
-                <p className="text-lg text-gray-600">All Northwestern students welcome—no experience required!</p>
-              </div>
+              {showFirstMeeting ? (
+                <div className="text-center mb-6">
+                  <span className={`inline-block rounded-full ${NORTHWESTERN_COLORS.BG_LIGHT} px-3 py-1 text-xs font-semibold uppercase tracking-wide ${NORTHWESTERN_COLORS.TEXT} mb-3`}>
+                    {firstMeeting.title}
+                  </span>
+                  <h2 className="text-3xl font-bold text-gray-900 mb-2">{firstMeeting.subtitle}</h2>
+                  <p className="text-lg text-gray-600">Our first meeting of the 2026-2027 academic year. Open to all, no experience necessary!</p>
+                </div>
+              ) : (
+                <div className="text-center mb-6">
+                  <h2 className="text-3xl font-bold text-gray-900 mb-2">Join Us This Week</h2>
+                  <p className="text-lg text-gray-600">All Northwestern students welcome, no experience required!</p>
+                </div>
+              )}
 
               <div className="flex flex-col sm:flex-row items-center justify-center gap-6 mb-8">
                 <div className="flex items-center gap-3">
@@ -80,8 +92,17 @@ export default function Home() {
                     </svg>
                   </div>
                   <div>
-                    <p className="text-sm font-semibold text-gray-900">Weekly Meetings</p>
-                    <p className="text-sm text-gray-600">Check our contact page</p>
+                    {showFirstMeeting ? (
+                      <>
+                        <p className="text-sm font-semibold text-gray-900">{firstMeeting.displayDate}</p>
+                        <p className="text-sm text-gray-600">Drop in {firstMeeting.dropInWindow}</p>
+                      </>
+                    ) : (
+                      <>
+                        <p className="text-sm font-semibold text-gray-900">Weekly Meetings</p>
+                        <p className="text-sm text-gray-600">Fall schedule TBA</p>
+                      </>
+                    )}
                   </div>
                 </div>
 
@@ -93,8 +114,24 @@ export default function Home() {
                     </svg>
                   </div>
                   <div>
-                    <p className="text-sm font-semibold text-gray-900">Northwestern Campus</p>
-                    <p className="text-sm text-gray-600">Evanston, IL</p>
+                    {showFirstMeeting ? (
+                      <>
+                        <p className="text-sm font-semibold text-gray-900">{firstMeeting.locationName}</p>
+                        <a
+                          href={firstMeeting.mapUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-sm text-gray-600 hover:text-gray-900 underline"
+                        >
+                          {firstMeeting.address}
+                        </a>
+                      </>
+                    ) : (
+                      <>
+                        <p className="text-sm font-semibold text-gray-900">Northwestern Campus</p>
+                        <p className="text-sm text-gray-600">Evanston, IL</p>
+                      </>
+                    )}
                   </div>
                 </div>
               </div>
@@ -104,7 +141,7 @@ export default function Home() {
                   to="/nu/join"
                   className={`inline-flex items-center gap-2 rounded-xl bg-gradient-to-r ${NORTHWESTERN_COLORS.GRADIENT_PRIMARY} px-6 py-3 text-base font-semibold text-white shadow-lg ${NORTHWESTERN_COLORS.GRADIENT_PRIMARY_HOVER} transition-all duration-200`}
                 >
-                  <span>Learn More & Join</span>
+                  <span>{showFirstMeeting ? 'Details & Directions' : 'Learn More & Join'}</span>
                   <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
                   </svg>
