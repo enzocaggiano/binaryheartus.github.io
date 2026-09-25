@@ -7,6 +7,7 @@ import { firstMeeting, isFirstMeetingUpcoming } from './firstMeeting';
 
 // Standalone signup page deployed from signup/ to Cloudflare Pages
 const NU_SIGNUP_URL = 'https://join.binaryheart.org/nu';
+const CATS_ON_CAMPUS_URL = 'https://catsoncampus.northwestern.edu/binaryheart/club_signup';
 
 export default function Join() {
   const showFirstMeeting = isFirstMeetingUpcoming();
@@ -106,7 +107,7 @@ export default function Join() {
                     Drop in anytime between {firstMeeting.dropInWindow} on {firstMeeting.displayDate}.
                   </p>
                   <p className="mb-4">No experience necessary. We'll teach you everything you need to know!</p>
-                  <div className="flex flex-col sm:flex-row justify-center gap-3">
+                  <div className="mx-auto grid max-w-lg grid-cols-1 sm:grid-cols-2 gap-3">
                     <a
                       href={`${NU_SIGNUP_URL}?src=website`}
                       target="_blank"
@@ -116,8 +117,16 @@ export default function Join() {
                       Join our mailing list
                     </a>
                     <a
-                      href={`mailto:${firstMeeting.email}`}
+                      href={CATS_ON_CAMPUS_URL}
+                      target="_blank"
+                      rel="noopener noreferrer"
                       className={`inline-flex items-center justify-center gap-2 rounded-lg bg-gradient-to-r ${NORTHWESTERN_COLORS.GRADIENT_PRIMARY} px-5 py-2.5 text-sm font-semibold text-white shadow-md ${NORTHWESTERN_COLORS.GRADIENT_PRIMARY_HOVER} transition-all duration-200`}
+                    >
+                      Join on Cats on Campus
+                    </a>
+                    <a
+                      href={`mailto:${firstMeeting.email}`}
+                      className="inline-flex items-center justify-center gap-2 rounded-lg bg-white px-5 py-2.5 text-sm font-semibold text-gray-900 shadow-md ring-1 ring-gray-900/10 hover:bg-gray-50 transition-all duration-200"
                     >
                       Email {firstMeeting.email}
                     </a>
@@ -333,6 +342,14 @@ export default function Join() {
                       <svg className="h-4 w-4 sm:h-5 sm:w-5 transition-transform duration-300 group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
                       </svg>
+                    </a>
+                    <a
+                      href={CATS_ON_CAMPUS_URL}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="ml-3 inline-flex items-center gap-2 rounded-xl px-5 sm:px-6 py-2.5 sm:py-3 text-sm sm:text-base font-semibold text-white ring-2 ring-white/70 transition-all duration-300 hover:bg-white/10"
+                    >
+                      Join on Cats on Campus
                     </a>
                   </div>
                 </div>

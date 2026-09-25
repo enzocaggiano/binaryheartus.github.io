@@ -24,6 +24,7 @@ const CONFIG = {
   INSTAGRAM_URL: 'https://instagram.com/binaryheartatnu',
   INSTAGRAM_HANDLE: '@binaryheartatnu',
   JOIN_PAGE_URL: 'https://binaryheart.org/nu/join',
+  CATS_ON_CAMPUS_URL: 'https://catsoncampus.northwestern.edu/binaryheart/club_signup',
   LOGO_URL: 'https://www.binaryheart.org/assets/images/chapters/national/icon.png',
   // Same file the website's first-meeting section reads, so the email is never
   // out of date with binaryheart.org/nu/join.
@@ -280,6 +281,8 @@ function confirmationText_(email, meeting) {
   const lines = [
     `You're on the list! We'll send BinaryHeart Northwestern updates to ${email}.`,
     '',
+    `Also join us on Cats on Campus: ${CONFIG.CATS_ON_CAMPUS_URL}`,
+    '',
   ];
   if (meeting) {
     lines.push(
@@ -321,6 +324,8 @@ function confirmationHtml_(email, meeting) {
 <div style="${font} font-size: 14px; line-height: 1.6; max-width: 800px; margin: 0 auto; padding: 0 20px;">
 
   <p style="margin: 20px 0;">Thanks for joining! We'll send meeting and event updates to <strong>${e(email)}</strong>.</p>
+  <p style="margin: 20px 0 0 0; text-align: center;">Also join us on Cats on Campus, Northwestern's club directory:</p>
+  <p style="margin: 12px 0 20px 0; text-align: center;"><a href="${CONFIG.CATS_ON_CAMPUS_URL}" style="${font} display: inline-block; background-color: #4e2a84; color: #ffffff; text-decoration: none; font-weight: 600; padding: 12px 22px; border-radius: 8px;">Join us on Cats on Campus</a></p>
 ${meetingBlocksHtml_(meeting, 'red')}
 
   <div style="background-color: #f6f2fb; border-radius: 8px; padding: 25px; margin: 30px 0; border-left: 4px solid #4e2a84;">
@@ -397,7 +402,8 @@ function needsNuEmailHtml_(meeting) {
     <h2 style="${font} color: #4e2a84; margin: 0 0 15px 0; font-size: 20px; font-weight: 600;">One Quick Thing</h2>
     <hr style="border: none; height: 1px; background-color: #dee2e6; margin: 15px 0;">
     <p style="margin: 15px 0;"><strong>Reply to this email with your @u.northwestern.edu address</strong> so we can add you to our Cats on Campus page too. Northwestern only lets us add Northwestern emails.</p>
-    <p style="margin: 15px 0;">That's it. We'll confirm once you're added.</p>
+    <p style="margin: 15px 0;">That's it. We'll confirm once you're added. Or join Cats on Campus yourself:</p>
+    <p style="margin: 15px 0 5px 0; text-align: center;"><a href="${CONFIG.CATS_ON_CAMPUS_URL}" style="${font} display: inline-block; background-color: #4e2a84; color: #ffffff; text-decoration: none; font-weight: 600; padding: 12px 22px; border-radius: 8px;">Join us on Cats on Campus</a></p>
   </div>
 ${meetingBlocksHtml_(meeting, 'red')}
 
@@ -424,6 +430,7 @@ function needsNuEmailText_(meeting) {
     'Thanks for joining BinaryHeart at Northwestern!',
     '',
     'One quick thing: reply with your @u.northwestern.edu email so we can add you to our Cats on Campus page too. (Northwestern only lets us add Northwestern emails.)',
+    `Or join Cats on Campus yourself: ${CONFIG.CATS_ON_CAMPUS_URL}`,
     '',
   ];
   if (meeting) {

@@ -90,7 +90,7 @@ Redeploy once after adding the variables.
 
 ### 3. Optional tweaks
 
-- **Cats on Campus button.** Set `CATS_ON_CAMPUS_URL` near the top of the script in `public/index.html`. A "Join us on Cats on Campus" button then appears after signup.
+- **Cats on Campus button.** After signing up, people see a red "Join us on Cats on Campus" button linking to `CATS_ON_CAMPUS_URL` (set near the top of the script in `public/nu.html`). Clear it to hide the button.
 - **Confirmation emails.** `CONFIG.SEND_CONFIRMATION` in `Code.gs` (on by default). The "you're on the list" email is styled like the chapter's other emails and helps people catch typos. It shows the first meeting from `src/data/chapters/nu/firstMeeting.json` (the same file `/nu/join` uses) until that date passes, and always links to `/nu/join` for current meeting times. Run `sendTestConfirmation` in the Apps Script editor to preview it in your inbox.
 - **Subject line.** If you change `MAILTO_SUBJECT` in `index.html`, change `CONFIG.MAILTO_SUBJECT` in `Code.gs` to match. The inbox scan searches for that subject.
 
