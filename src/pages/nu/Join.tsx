@@ -167,7 +167,7 @@ export default function Join() {
                       rel="noopener noreferrer"
                       className="text-sm sm:text-base text-white/90 hover:text-white underline"
                     >
-                      Orrington Ave, Evanston
+                      1910 Orrington Ave, Evanston
                     </a>
                   </div>
                 </div>

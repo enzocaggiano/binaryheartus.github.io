@@ -112,7 +112,7 @@ export default function Contact() {
                           rel="noopener noreferrer"
                           className={`${NORTHWESTERN_COLORS.TEXT} ${NORTHWESTERN_COLORS.TEXT_HOVER}`}
                         >
-                          Orrington Ave, Evanston
+                          1910 Orrington Ave, Evanston
                         </a>
                       </div>
                     </div>
