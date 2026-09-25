@@ -2,7 +2,7 @@ import { Link } from 'react-router-dom';
 import InfoCard from '../../components/InfoCard';
 import WhyJoin from '../../components/WhyJoin';
 import BinaryHeartText from '../../components/BinaryHeartText';
-import { NORTHWESTERN_COLORS } from '../../utils/brandColors';
+import { BRAND_COLORS, NORTHWESTERN_COLORS } from '../../utils/brandColors';
 import { firstMeeting, isFirstMeetingUpcoming } from './firstMeeting';
 
 export default function Join() {
@@ -35,7 +35,7 @@ export default function Join() {
                 </span>
                 <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-3">{firstMeeting.subtitle}</h2>
                 <p className="text-base sm:text-lg text-gray-600">
-                  Join <BinaryHeartText /> at Northwestern for our first meeting of the 2026-2027 academic year. Open to all!
+                  Join <BinaryHeartText binaryColor={BRAND_COLORS.BINARY_TEXT} heartColor={BRAND_COLORS.HEART_TEXT} /> at Northwestern for our first meeting of the 2026-2027 academic year. Open to all!
                 </p>
               </div>
 
