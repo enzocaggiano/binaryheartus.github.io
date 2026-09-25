@@ -148,7 +148,7 @@ export default function Join() {
                   </div>
                   <div className="text-center">
                     <p className="text-base sm:text-lg font-bold mb-1">Fall 2026 Schedule TBA</p>
-                    <p className="text-sm sm:text-base text-white/90">Set based on the availability of interested members</p>
+                    <p className="text-sm sm:text-base text-white/90">Set based on the availability of interested members, will be announced Sunday, October 11th</p>
                   </div>
                 </div>
 

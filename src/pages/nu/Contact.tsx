@@ -105,7 +105,7 @@ export default function Contact() {
                       </div>
                       <div>
                         <p className="text-sm font-semibold text-gray-900">Weekly Meetings</p>
-                        <p className="text-gray-600">Fall 2026 schedule TBA (set based on member availability)</p>
+                        <p className="text-gray-600">Fall 2026 schedule TBA (set based on member availability, will be announced Sunday, October 11th)</p>
                         <a
                           href="https://maps.app.goo.gl/J3xPJzFdN3vJDWWZ9"
                           target="_blank"
