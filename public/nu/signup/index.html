@@ -17,7 +17,7 @@
   <meta name="format-detection" content="telephone=no" />
   <meta property="og:title" content="Join BinaryHeart at Northwestern" />
   <meta property="og:description" content="Type your Northwestern email, tap Join. That's it." />
-  <link rel="icon" type="image/svg+xml" href="/icon.svg" />
+  <link rel="icon" type="image/svg+xml" href="/nu/signup/icon.svg" />
   <style>
     :root {
       color-scheme: light;
@@ -167,6 +167,7 @@
     /* Success screen: each next step gets its own brand color */
     .btn.purple { background: linear-gradient(135deg, #6a3fad, #4E2A84); box-shadow: 0 10px 22px -12px rgba(78, 42, 132, .75); }
     .btn.blue { background: linear-gradient(135deg, #2F4A70, #193961); box-shadow: 0 10px 22px -12px rgba(25, 57, 97, .75); font-size: 16px; font-weight: 600; padding: 14px 18px; }
+    .btn.discord { background: linear-gradient(135deg, #6c77f5, #5865F2); box-shadow: 0 10px 22px -12px rgba(88, 101, 242, .75); font-size: 16px; font-weight: 600; padding: 14px 18px; }
     .btn.red-small { font-size: 16px; font-weight: 600; padding: 14px 18px; }
     .spinner {
       width: 18px; height: 18px; border-radius: 50%;
@@ -214,7 +215,7 @@
         <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M12 3v2.25m6.364.386-1.591 1.591M21 12h-2.25m-.386 6.364-1.591-1.591M12 18.75V21m-4.773-4.227-1.591 1.591M5.25 12H3m4.227-4.773L5.636 5.636M15.75 12a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0Z"/></svg>
       </button>
       <div class="brand">
-        <img src="/icon.svg" alt="" />
+        <img src="/nu/signup/icon.svg" alt="" />
         <div>
           <span class="wordmark"><span class="binary">Binary</span><span class="heart">Heart</span></span>
           <span class="chapter">Northwestern <span class="chapter-word">Chapter</span></span>
@@ -260,7 +261,7 @@
     <!-- Step 2: success -->
     <!-- Branding sits above the success card -->
     <div class="brand brand-outside" id="done-brand" hidden>
-      <img src="/icon.svg" alt="" />
+      <img src="/nu/signup/icon.svg" alt="" />
       <div>
         <span class="wordmark"><span class="binary">Binary</span><span class="heart">Heart</span></span>
         <span class="chapter">Northwestern <span class="chapter-word">Chapter</span></span>
@@ -282,6 +283,7 @@
         <a class="btn" id="fallback-mailto" href="#" hidden>Join by email</a>
         <a class="btn purple" id="cats-link" href="#" target="_blank" rel="noopener" hidden>Join us on Cats on Campus</a>
         <a class="btn blue" href="https://instagram.com/binaryheartatnu" target="_blank" rel="noopener">Follow @binaryheartatnu</a>
+        <a class="btn discord" href="https://discord.gg/66ccvwV7J" target="_blank" rel="noopener">Join BinaryHeart's Discord</a>
         <button class="btn red-small" id="another" type="button">Sign up another email</button>
       </div>
     </section>
@@ -295,6 +297,8 @@
       // automation can find these emails.
       var MAILTO_SUBJECT = 'Join the BinaryHeart NU mailing list';
       // Paste the chapter's Cats on Campus page here to show a "Join us" button after signup.
+      // Apps Script web app (Deploy → Manage deployments). Its URL stays the same across new versions.
+      var APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycby4E0zi8MbhMewZhH4bXmc-Nu2KlNaJNv6AVY8hXuwS1ht1Liu94FLv_hcWx0gh7pF7pQ/exec';
       var CATS_ON_CAMPUS_URL = 'https://catsoncampus.northwestern.edu/binaryheart/club_signup';
       var DEFAULT_DOMAIN = 'u.northwestern.edu';
       var NU_DOMAINS = ['u.northwestern.edu', 'northwestern.edu'];
@@ -510,9 +514,11 @@
         var controller = 'AbortController' in window ? new AbortController() : null;
         var timer = controller && setTimeout(function () { controller.abort(); }, 12000);
 
-        fetch('/api/join', {
+        // Straight to the Apps Script web app. text/plain keeps this a "simple"
+        // cross-origin request (no preflight), which Apps Script can answer.
+        fetch(APPS_SCRIPT_URL, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
           body: JSON.stringify({ email: email, source: kiosk ? 'tabling' : source, website: $('website').value }),
           signal: controller ? controller.signal : undefined
         })

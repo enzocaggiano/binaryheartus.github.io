@@ -1,19 +1,21 @@
 # NU Mailing List Signup
 
-A small, standalone signup site that collects Northwestern emails for the BinaryHeart NU chapter. It's separate from the main React site. It deploys to **Cloudflare Pages**, and every signup goes into a **Google Sheet**.
+Collects Northwestern emails for the BinaryHeart NU chapter. The signup page is part of the main site at **binaryheart.org/nu/signup/**, and every signup goes into a **Google Sheet** through a Google Apps Script.
 
 ```
             ┌───────────── Web flow ─────────────┐
-Phone ──▶  signup page ──▶ /api/join (CF Pages Function) ──▶ Apps Script doPost ──▶ Google Sheet
+Phone ──▶  binaryheart.org/nu/signup/ ──▶ Apps Script doPost ──▶ Google Sheet
             └── "Join by email instead" ──▶ nu@binaryheart.org ──▶ Apps Script (every minute) ──┘
 ```
 
 | Path | What it is |
 | --- | --- |
-| `public/index.html` | The signup page. Plain HTML/CSS/JS with no build step |
-| `functions/api/join.js` | Cloudflare Pages Function. Validates the email and forwards it to Apps Script |
-| `apps-script/Code.gs` | Google Apps Script bound to the Sheet. Handles web signups and scans the inbox for mailto signups |
-| `wrangler.toml` | Cloudflare Pages project config |
+| `../public/nu/signup/index.html` | The signup page. Plain HTML/CSS/JS with no build step; Vite copies it into the site as is |
+| `apps-script/Code.gs` | Google Apps Script bound to the Sheet. Saves web signups, scans the inbox for mailto signups, sends confirmations |
+| `apps-script/.clasp.json` | Connects this folder to the live script for `clasp push` |
+| `redirect/_redirects`, `wrangler.toml` | The `join.binaryheart.org` short link (Cloudflare Pages, redirects only) |
+
+The page posts straight to the Apps Script web app, so that endpoint is public. `doPost` ignores submissions that fill the hidden honeypot field, only accepts Northwestern emails, and allows `CONFIG.MAX_WEB_SIGNUPS_PER_MINUTE` web signups per minute (60 by default). Anything over the cap gets the page's "Join by email" fallback, so real people still get through.
 
 ## Signup flows
 
@@ -32,6 +34,8 @@ Every flow ends in the same Sheet and is deduplicated by email.
 
 Add `?src=` so the Sheet shows where each signup came from:
 
+`join.binaryheart.org/nu` is a short link that redirects to `binaryheart.org/nu/signup/` and keeps the `?src=` part, so either works.
+
 | Channel | Link |
 | --- | --- |
 | Flyers (QR code) | `https://join.binaryheart.org/nu?src=flyer` |
@@ -39,7 +43,7 @@ Add `?src=` so the Sheet shows where each signup came from:
 | GroupMe | `https://join.binaryheart.org/nu?src=groupme` |
 | Email blasts | `https://join.binaryheart.org/nu?src=email` |
 | Tabling iPad | `https://join.binaryheart.org/nu?kiosk` |
-| Main website (already linked from `/nu/join`) | `https://join.binaryheart.org/nu?src=website` |
+| Main website (already linked from `/nu/join`) | `/nu/signup/?src=website` |
 
 ### iPhone-native options (no app needed)
 
@@ -57,40 +61,23 @@ App Clips could run the flow without opening Safari, but they need a published A
 1. Sign in as the **chapter Gmail account** (the one that receives mail for `nu@binaryheart.org`). The script reads that inbox, so it must run as this account.
 2. Create a new Google Sheet, e.g. *BinaryHeart NU Mailing List*.
 3. **Extensions → Apps Script**, delete the placeholder code, and paste in `apps-script/Code.gs`. Save.
-4. Pick `setup` in the function dropdown and click **Run**. Approve the permissions (Sheets, Gmail, triggers). This:
-   - creates the `Signups` tab with headers,
-   - creates the Gmail label *Mailing List Signup*,
-   - generates a random `SIGNUP_SECRET` (printed in the **Execution log** at the bottom; copy it),
-   - installs a trigger that checks the inbox every minute.
-5. **Deploy → New deployment → Web app**
-   - Execute as: **Me**
-   - Who has access: **Anyone**
-   - Copy the web app URL (ends in `/exec`).
+4. Pick `setup` in the function dropdown and click **Run**. Approve the permissions (Sheets, Gmail, triggers). This creates the `Signups` tab with headers, creates the Gmail label *Mailing List Signup*, and installs a trigger that checks the inbox every minute.
+5. **Deploy → New deployment → Web app**, Execute as **Me**, Who has access **Anyone**. Copy the web app URL (ends in `/exec`) into `APPS_SCRIPT_URL` near the top of the script in `public/nu/signup/index.html`.
 
 > If `nu@binaryheart.org` is a Google Group or alias that forwards to a personal Gmail, run the script from whichever account actually receives the mail.
 
-### 2. Cloudflare Pages
+### 2. The page
 
-From this `signup/` directory:
+Nothing to set up: the page ships with the main site and deploys on every merge to `main`.
 
-```bash
-npx wrangler pages deploy
-```
+### 3. Short link (optional)
 
-On first run it creates the `binaryheart-nu-join` project (→ `binaryheart-nu-join.pages.dev`). Then in the Cloudflare dashboard, go to **Workers & Pages → binaryheart-nu-join → Settings → Variables and Secrets** and add:
+`join.binaryheart.org` is a Cloudflare Pages project (`binaryheart-nu-join`, on the `admin@binaryheart.org` account) that only serves `redirect/_redirects`. To change it, edit that file and run `npx wrangler pages deploy --branch main` from this `signup/` directory. The DNS record is a `CNAME` from `join` to `binaryheart-nu-join.pages.dev`.
 
-| Name | Value |
-| --- | --- |
-| `APPS_SCRIPT_URL` | The `/exec` URL from step 1.5 |
-| `SIGNUP_SECRET` | The secret from the Apps Script log (mark it as a secret) |
+### 4. Optional tweaks
 
-Redeploy once after adding the variables.
-
-**Custom domain.** The project is on the `admin@binaryheart.org` Cloudflare account with the custom domain `join.binaryheart.org` (under **Custom domains**). The page itself is `public/nu.html`, served at `join.binaryheart.org/nu`; `public/_redirects` sends the bare domain (and old `pages.dev` links) to `/nu`. Another chapter could get its own page the same way (e.g. `public/iu.html` → `/iu`).
-
-### 3. Optional tweaks
-
-- **Cats on Campus button.** After signing up, people see a red "Join us on Cats on Campus" button linking to `CATS_ON_CAMPUS_URL` (set near the top of the script in `public/nu.html`). Clear it to hide the button.
+- **Buttons after signup.** `CATS_ON_CAMPUS_URL` near the top of the script in `index.html` sets the purple Cats on Campus button (clear it to hide the button). The Instagram and Discord buttons are plain links in the `#next` section.
+- **Discord.** The Discord invite is the national BinaryHeart server. It's in `index.html`, `CONFIG.DISCORD_URL` in `Code.gs`, and `DISCORD_URL` in `src/pages/nu/Join.tsx`.
 - **Confirmation emails.** `CONFIG.SEND_CONFIRMATION` in `Code.gs` (on by default). The "you're on the list" email is styled like the chapter's other emails and helps people catch typos. It shows the first meeting from `src/data/chapters/nu/firstMeeting.json` (the same file `/nu/join` uses) until that date passes, and always links to `/nu/join` for current meeting times. Run `sendTestConfirmation` in the Apps Script editor to preview it in your inbox.
 - **Subject line.** If you change `MAILTO_SUBJECT` in `index.html`, change `CONFIG.MAILTO_SUBJECT` in `Code.gs` to match. The inbox scan searches for that subject.
 
@@ -105,7 +92,7 @@ npx @google/clasp push -f
 npx @google/clasp update-deployment AKfycby4E0zi8MbhMewZhH4bXmc-Nu2KlNaJNv6AVY8hXuwS1ht1Liu94FLv_hcWx0gh7pF7pQ -d "BinaryHeart Northwestern Chapter Mailing List Sign-Up"
 ```
 
-The first command uploads the code (the 1-minute inbox check uses it right away). The second points the web app at the new version while keeping its URL, so Cloudflare needs no change. If a change needs new permissions, run `sendTestConfirmation` once in the editor to approve them.
+The first command uploads the code (the 1-minute inbox check uses it right away). The second points the web app at the new version while keeping its URL, so the page needs no change. If a change needs new permissions, run `sendTestConfirmation` once in the editor to approve them.
 
 Without clasp: paste `Code.gs` into the editor, save, then **Deploy → Manage deployments → ✏️ → New version → Deploy**.
 

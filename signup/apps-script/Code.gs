@@ -25,6 +25,9 @@ const CONFIG = {
   INSTAGRAM_HANDLE: '@binaryheartatnu',
   JOIN_PAGE_URL: 'https://binaryheart.org/nu/join',
   CATS_ON_CAMPUS_URL: 'https://catsoncampus.northwestern.edu/binaryheart/club_signup',
+  DISCORD_URL: 'https://discord.gg/66ccvwV7J', // national BinaryHeart server, all chapters
+  // Web signups beyond this in one minute get the page's email fallback instead.
+  MAX_WEB_SIGNUPS_PER_MINUTE: 60,
   // How the emails describe the first meeting (date, time and place come from firstMeeting.json).
   // Keep in sync with subtitle/description in src/data/chapters/nu/firstMeeting.json.
   FIRST_MEETING_SUBTITLE: 'Intro to BinaryHeart: Hardware & Software',
@@ -45,15 +48,12 @@ const NU_EMAIL_IN_TEXT = /[a-z0-9._%+'-]+@(?:u\.)?northwestern\.edu/gi;
 /* One-time setup                                                           */
 /* ------------------------------------------------------------------------ */
 
-/** Run once from the editor. Creates the sheet, label, secret, and trigger. */
+/** Run once from the editor. Creates the sheet, label, and trigger. */
 function setup() {
   getSheet_();
   GmailApp.getUserLabelByName(CONFIG.PROCESSED_LABEL) || GmailApp.createLabel(CONFIG.PROCESSED_LABEL);
 
   const props = PropertiesService.getScriptProperties();
-  if (!props.getProperty('SIGNUP_SECRET')) {
-    props.setProperty('SIGNUP_SECRET', Utilities.getUuid());
-  }
   if (!props.getProperty('LAST_MAIL_CHECK')) {
     // Pick up signups sent in the last week on the first run.
     props.setProperty('LAST_MAIL_CHECK', String(Date.now() - 7 * 24 * 60 * 60 * 1000));
@@ -64,7 +64,7 @@ function setup() {
     .forEach(t => ScriptApp.deleteTrigger(t));
   ScriptApp.newTrigger('processMailtoSignups').timeBased().everyMinutes(CONFIG.TRIGGER_MINUTES).create();
 
-  Logger.log('Setup done. SIGNUP_SECRET for Cloudflare: %s', props.getProperty('SIGNUP_SECRET'));
+  Logger.log('Setup done.');
 }
 
 /* ------------------------------------------------------------------------ */
@@ -79,13 +79,21 @@ function doPost(e) {
     return json_({ ok: false, error: 'bad_request' });
   }
 
-  const secret = PropertiesService.getScriptProperties().getProperty('SIGNUP_SECRET');
-  if (!secret || body.secret !== secret) return json_({ ok: false, error: 'unauthorized' });
+  // The signup page (binaryheart.org/nu/signup) posts here directly, so this
+  // endpoint is public. Filter bots and cap the rate before touching the Sheet.
+  if (body.website) return json_({ ok: true }); // honeypot field was filled in
 
-  const email = String(body.email || '').trim().toLowerCase();
-  if (!NU_EMAIL.test(email)) return json_({ ok: false, error: 'not_northwestern' });
+  let email = String(body.email || '').trim().toLowerCase().replace(/^mailto:/, '').replace(/\s+/g, '');
+  if (email && email.indexOf('@') === -1) email += '@u.northwestern.edu';
+  if (email.length > 254 || !NU_EMAIL.test(email)) return json_({ ok: false, error: 'not_northwestern' });
 
-  const result = addSignup_(email, 'web', body.source || 'web', '');
+  const cache = CacheService.getScriptCache();
+  const recent = Number(cache.get('WEB_POSTS') || 0);
+  if (recent >= CONFIG.MAX_WEB_SIGNUPS_PER_MINUTE) return json_({ ok: false, error: 'busy' });
+  cache.put('WEB_POSTS', String(recent + 1), 60);
+
+  const source = String(body.source || 'web').toLowerCase().replace(/[^a-z0-9_-]/g, '').slice(0, 40) || 'web';
+  const result = addSignup_(email, 'web', source, '');
   if (result.added && CONFIG.SEND_CONFIRMATION) sendConfirmation_(email);
   return json_({ ok: true, duplicate: !result.added });
 }
@@ -301,6 +309,7 @@ function confirmationText_(email, meeting) {
   lines.push(
     `When and where we meet: ${CONFIG.JOIN_PAGE_URL}`,
     `Instagram: ${CONFIG.INSTAGRAM_URL}`,
+    `Discord: ${CONFIG.DISCORD_URL}`,
     '',
     'Questions? Just reply to this email. Reply "unsubscribe" anytime to be removed.',
     '',
@@ -341,6 +350,8 @@ ${meetingBlocksHtml_(meeting, 'red')}
 
   <div style="background-color: #ffffff; border-radius: 8px; padding: 25px; margin: 30px 0; border: 1px solid #dee2e6; text-align: center;">
     <p style="margin: 15px 0; font-size: 16px;"><strong>Follow us on Instagram <a href="${CONFIG.INSTAGRAM_URL}" style="${link}">${CONFIG.INSTAGRAM_HANDLE}</a> for updates and behind-the-scenes content!</strong></p>
+    <p style="margin: 15px 0 5px 0;"><a href="${CONFIG.DISCORD_URL}" style="${font} display: inline-block; background-color: #5865F2; color: #ffffff; text-decoration: none; font-weight: 600; padding: 12px 22px; border-radius: 8px;">Join BinaryHeart's Discord</a></p>
+    <p style="margin: 5px 0 0 0; color: #666; font-size: 13px;">Chat with members from every BinaryHeart chapter.</p>
   </div>
 
   <div style="margin: 30px 0; padding: 20px 0; border-top: 2px solid #dee2e6;">
@@ -415,6 +426,8 @@ ${meetingBlocksHtml_(meeting, 'red')}
 
   <div style="background-color: #ffffff; border-radius: 8px; padding: 25px; margin: 30px 0; border: 1px solid #dee2e6; text-align: center;">
     <p style="margin: 15px 0; font-size: 16px;"><strong>Follow us on Instagram <a href="${CONFIG.INSTAGRAM_URL}" style="${link}">${CONFIG.INSTAGRAM_HANDLE}</a> for updates and behind-the-scenes content!</strong></p>
+    <p style="margin: 15px 0 5px 0;"><a href="${CONFIG.DISCORD_URL}" style="${font} display: inline-block; background-color: #5865F2; color: #ffffff; text-decoration: none; font-weight: 600; padding: 12px 22px; border-radius: 8px;">Join BinaryHeart's Discord</a></p>
+    <p style="margin: 5px 0 0 0; color: #666; font-size: 13px;">Chat with members from every BinaryHeart chapter.</p>
   </div>
 
   <div style="margin: 30px 0; padding: 20px 0; border-top: 2px solid #dee2e6;">
@@ -449,7 +462,7 @@ function needsNuEmailText_(meeting) {
       '',
     );
   }
-  lines.push(`When and where we meet: ${CONFIG.JOIN_PAGE_URL}`, '', `– ${CONFIG.CHAPTER_NAME}`);
+  lines.push(`When and where we meet: ${CONFIG.JOIN_PAGE_URL}`, `Discord: ${CONFIG.DISCORD_URL}`, '', `– ${CONFIG.CHAPTER_NAME}`);
   return lines.join('\n');
 }
 

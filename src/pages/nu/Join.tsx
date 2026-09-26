@@ -6,8 +6,9 @@ import { BRAND_COLORS, NORTHWESTERN_COLORS } from '../../utils/brandColors';
 import { firstMeeting, isFirstMeetingUpcoming } from './firstMeeting';
 
 // Standalone signup page deployed from signup/ to Cloudflare Pages
-const NU_SIGNUP_URL = 'https://join.binaryheart.org/nu';
+const NU_SIGNUP_URL = '/nu/signup/';
 const CATS_ON_CAMPUS_URL = 'https://catsoncampus.northwestern.edu/binaryheart/club_signup';
+const DISCORD_URL = 'https://discord.gg/66ccvwV7J'; // national BinaryHeart server
 
 export default function Join() {
   const showFirstMeeting = isFirstMeetingUpcoming();
@@ -108,8 +109,6 @@ export default function Join() {
                   <div className="mx-auto grid max-w-lg grid-cols-1 sm:grid-cols-2 gap-3">
                     <a
                       href={`${NU_SIGNUP_URL}?src=website`}
-                      target="_blank"
-                      rel="noopener noreferrer"
                       className={`inline-flex items-center justify-center gap-2 rounded-lg bg-gradient-to-r ${BRAND_COLORS.BINARY_GRADIENT} px-5 py-2.5 text-sm font-semibold text-white shadow-md hover:opacity-90 transition-all duration-200`}
                     >
                       Join our mailing list
@@ -135,6 +134,14 @@ export default function Join() {
                       className="inline-flex items-center justify-center gap-2 rounded-lg bg-white px-5 py-2.5 text-sm font-semibold text-gray-900 shadow-md ring-1 ring-gray-900/10 hover:bg-gray-50 transition-all duration-200"
                     >
                       DM @{firstMeeting.instagram}
+                    </a>
+                    <a
+                      href={DISCORD_URL}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="sm:col-span-2 inline-flex items-center justify-center gap-2 rounded-lg bg-[#5865F2] px-5 py-2.5 text-sm font-semibold text-white shadow-md hover:bg-[#4752C4] transition-all duration-200"
+                    >
+                      Join BinaryHeart's Discord
                     </a>
                   </div>
                   <p className="mt-4 text-gray-900 font-medium">We're looking forward to seeing everyone!</p>
@@ -330,10 +337,9 @@ export default function Join() {
                     <p className="text-white/90 mb-6 text-sm sm:text-base">
                       Get meeting and event updates in your inbox.
                     </p>
+                    <div className="flex flex-wrap gap-3">
                     <a
                       href={`${NU_SIGNUP_URL}?src=website`}
-                      target="_blank"
-                      rel="noopener noreferrer"
                       className="group inline-flex items-center gap-2 rounded-xl bg-white px-5 sm:px-6 py-2.5 sm:py-3 text-sm sm:text-base font-semibold text-gray-900 shadow-lg transition-all duration-300 hover:scale-105 hover:shadow-xl"
                     >
                       <span>Sign Up</span>
@@ -345,10 +351,19 @@ export default function Join() {
                       href={CATS_ON_CAMPUS_URL}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="ml-3 inline-flex items-center gap-2 rounded-xl px-5 sm:px-6 py-2.5 sm:py-3 text-sm sm:text-base font-semibold text-white ring-2 ring-white/70 transition-all duration-300 hover:bg-white/10"
+                      className="inline-flex items-center gap-2 rounded-xl px-5 sm:px-6 py-2.5 sm:py-3 text-sm sm:text-base font-semibold text-white ring-2 ring-white/70 transition-all duration-300 hover:bg-white/10"
                     >
                       Join on Cats on Campus
                     </a>
+                    <a
+                      href={DISCORD_URL}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-2 rounded-xl px-5 sm:px-6 py-2.5 sm:py-3 text-sm sm:text-base font-semibold text-white ring-2 ring-white/70 transition-all duration-300 hover:bg-white/10"
+                    >
+                      Join our Discord
+                    </a>
+                    </div>
                   </div>
                 </div>
               </div>
