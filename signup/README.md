@@ -96,10 +96,18 @@ Redeploy once after adding the variables.
 
 ## Updating the Apps Script
 
-After changing `Code.gs`, paste the new version into the Apps Script editor and save. Then:
+`apps-script/` is connected to the live script with [clasp](https://github.com/google/clasp) (`.clasp.json` holds the script ID). One-time setup on a new computer: turn on the Apps Script API at https://script.google.com/home/usersettings, then run `npx @google/clasp login` and sign in as `nu@binaryheart.org`.
 
-1. Run `sendTestConfirmation` once. It sends a preview to your inbox and asks for any new permissions.
-2. Go to **Deploy → Manage deployments**, click the pencil on the web app, set **Version** to **New version**, and click **Deploy**. The web app keeps its URL, so Cloudflare needs no change.
+After changing `Code.gs`, from `signup/apps-script/`:
+
+```bash
+npx @google/clasp push -f
+npx @google/clasp update-deployment AKfycby4E0zi8MbhMewZhH4bXmc-Nu2KlNaJNv6AVY8hXuwS1ht1Liu94FLv_hcWx0gh7pF7pQ -d "BinaryHeart Northwestern Chapter Mailing List Sign-Up"
+```
+
+The first command uploads the code (the 1-minute inbox check uses it right away). The second points the web app at the new version while keeping its URL, so Cloudflare needs no change. If a change needs new permissions, run `sendTestConfirmation` once in the editor to approve them.
+
+Without clasp: paste `Code.gs` into the editor, save, then **Deploy → Manage deployments → ✏️ → New version → Deploy**.
 
 ## Testing after setup
 
