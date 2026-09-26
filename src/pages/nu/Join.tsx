@@ -81,10 +81,8 @@ export default function Join() {
 
               <div className="space-y-6 text-sm sm:text-base text-gray-600">
                 <div>
-                  <h3 className="text-lg sm:text-xl font-semibold text-gray-900 mb-2">Workshop Focus</h3>
-                  <p>
-                    Learn computer repair skills to refurbish devices for donation to underserved groups. This hands-on workshop will teach you practical techniques for fixing and upgrading computers while making a positive impact in our community.
-                  </p>
+                  <h3 className="text-lg sm:text-xl font-semibold text-gray-900 mb-2">What We'll Cover</h3>
+                  <p>{firstMeeting.description}</p>
                 </div>
 
                 <div>

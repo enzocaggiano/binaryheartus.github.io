@@ -26,6 +26,7 @@ const CONFIG = {
   JOIN_PAGE_URL: 'https://binaryheart.org/nu/join',
   CATS_ON_CAMPUS_URL: 'https://catsoncampus.northwestern.edu/binaryheart/club_signup',
   // How the emails describe the first meeting (date, time and place come from firstMeeting.json).
+  // Keep in sync with subtitle/description in src/data/chapters/nu/firstMeeting.json.
   FIRST_MEETING_SUBTITLE: 'Intro to BinaryHeart: Hardware & Software',
   FIRST_MEETING_BLURB: 'Meet the team and see the work we do on both sides: hardware, where we repair and refurbish computers for donation, and software, where we build our OpenClaw cluster and other internal tools.',
   LOGO_URL: 'https://www.binaryheart.org/assets/images/chapters/national/icon.png',
