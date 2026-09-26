@@ -1,9 +1,22 @@
-import { Link } from 'react-router-dom';
+import { useState, type FormEvent } from 'react';
+import { Link, useSearchParams } from 'react-router-dom';
 import InfoCard from '../../components/InfoCard';
 import WhyJoin from '../../components/WhyJoin';
 import BinaryHeartText from '../../components/BinaryHeartText';
 import { BRAND_COLORS, NORTHWESTERN_COLORS } from '../../utils/brandColors';
 import { firstMeeting, isFirstMeetingUpcoming } from './firstMeeting';
+
+// Mailing list Google Form (owned by nu@binaryheart.org). The form rejects
+// non-Northwestern emails, and its Apps Script copies each signup to the
+// chapter's mailing list Sheet and sends a confirmation email.
+const MAILING_LIST_FORM = {
+  formUrl: 'https://docs.google.com/forms/d/e/1FAIpQLSc8t1MkudzsETj5OBLcX0DgLpy1PN-ukz43wciA2C-Cohsf5Q/formResponse',
+  fieldIds: { email: 'entry.649490301', source: 'entry.486317671' },
+};
+const NU_EMAIL = /^[a-z0-9._%+'-]+@(u\.)?northwestern\.edu$/;
+const MAILING_LIST_STORAGE_KEY = 'nuMailingListEmail';
+const CATS_ON_CAMPUS_URL = 'https://catsoncampus.northwestern.edu/binaryheart/club_signup';
+const DISCORD_URL = 'https://discord.gg/66ccvwV7J'; // national BinaryHeart server
 
 export default function Join() {
   const showFirstMeeting = isFirstMeetingUpcoming();
@@ -35,7 +48,7 @@ export default function Join() {
                 </span>
                 <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-3">{firstMeeting.subtitle}</h2>
                 <p className="text-base sm:text-lg text-gray-600">
-                  Join <BinaryHeartText binaryColor={BRAND_COLORS.BINARY_TEXT} heartColor={BRAND_COLORS.HEART_TEXT} /> at Northwestern for our first meeting of the 2026-2027 academic year. Open to all!
+                  Join <BinaryHeartText className="font-bold" binaryColor={BRAND_COLORS.BINARY_TEXT} heartColor={BRAND_COLORS.HEART_TEXT} /> at Northwestern for our first meeting of the 2026-2027 academic year. Open to all!
                 </p>
               </div>
 
@@ -77,10 +90,8 @@ export default function Join() {
 
               <div className="space-y-6 text-sm sm:text-base text-gray-600">
                 <div>
-                  <h3 className="text-lg sm:text-xl font-semibold text-gray-900 mb-2">Workshop Focus</h3>
-                  <p>
-                    Learn computer repair skills to refurbish devices for donation to underserved groups. This hands-on workshop will teach you practical techniques for fixing and upgrading computers while making a positive impact in our community.
-                  </p>
+                  <h3 className="text-lg sm:text-xl font-semibold text-gray-900 mb-2">What We'll Cover</h3>
+                  <p>{firstMeeting.description}</p>
                 </div>
 
                 <div>
@@ -103,11 +114,28 @@ export default function Join() {
                     Drop in anytime between {firstMeeting.dropInWindow} on {firstMeeting.displayDate}.
                   </p>
                   <p className="mb-4">No experience necessary. We'll teach you everything you need to know!</p>
-                  <div className="flex flex-col sm:flex-row justify-center gap-3">
+                  <div className="mx-auto grid max-w-lg grid-cols-1 sm:grid-cols-2 gap-3">
                     <a
-                      href={`mailto:${firstMeeting.email}`}
+                      href="#mailing-list"
+                      className={`inline-flex items-center justify-center gap-2 rounded-lg bg-gradient-to-r ${BRAND_COLORS.BINARY_GRADIENT} px-5 py-2.5 text-sm font-semibold text-white shadow-md hover:opacity-90 transition-all duration-200`}
+                    >
+                      <svg className="h-5 w-5 shrink-0" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor" aria-hidden="true"><path strokeLinecap="round" strokeLinejoin="round" d="M14.857 17.082a23.848 23.848 0 005.454-1.31A8.967 8.967 0 0118 9.75V9A6 6 0 006 9v.75a8.967 8.967 0 01-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 01-5.714 0m5.714 0a3 3 0 11-5.714 0" /></svg>
+                      Join our mailing list
+                    </a>
+                    <a
+                      href={CATS_ON_CAMPUS_URL}
+                      target="_blank"
+                      rel="noopener noreferrer"
                       className={`inline-flex items-center justify-center gap-2 rounded-lg bg-gradient-to-r ${NORTHWESTERN_COLORS.GRADIENT_PRIMARY} px-5 py-2.5 text-sm font-semibold text-white shadow-md ${NORTHWESTERN_COLORS.GRADIENT_PRIMARY_HOVER} transition-all duration-200`}
                     >
+                      <svg className="h-5 w-5 shrink-0" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor" aria-hidden="true"><path strokeLinecap="round" strokeLinejoin="round" d="M18 18.72a9.094 9.094 0 003.741-.479 3 3 0 00-4.682-2.72m.94 3.198l.001.031c0 .225-.012.447-.037.666A11.944 11.944 0 0112 21c-2.17 0-4.207-.576-5.963-1.584A6.062 6.062 0 016 18.719m12 0a5.971 5.971 0 00-.941-3.197m0 0A5.995 5.995 0 0012 12.75a5.995 5.995 0 00-5.058 2.772m0 0a3 3 0 00-4.681 2.72 8.986 8.986 0 003.74.477m.94-3.197a5.971 5.971 0 00-.94 3.197M15 6.75a3 3 0 11-6 0 3 3 0 016 0zm6 3a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0zm-13.5 0a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0z" /></svg>
+                      Join on Cats on Campus
+                    </a>
+                    <a
+                      href={`mailto:${firstMeeting.email}`}
+                      className="inline-flex items-center justify-center gap-2 rounded-lg bg-white px-5 py-2.5 text-sm font-semibold text-gray-900 shadow-md ring-1 ring-gray-900/10 hover:bg-gray-50 transition-all duration-200"
+                    >
+                      <svg className="h-5 w-5 shrink-0 text-gray-600" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor" aria-hidden="true"><path strokeLinecap="round" strokeLinejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75" /></svg>
                       Email {firstMeeting.email}
                     </a>
                     <a
@@ -116,7 +144,17 @@ export default function Join() {
                       rel="noopener noreferrer"
                       className="inline-flex items-center justify-center gap-2 rounded-lg bg-white px-5 py-2.5 text-sm font-semibold text-gray-900 shadow-md ring-1 ring-gray-900/10 hover:bg-gray-50 transition-all duration-200"
                     >
+                      <svg className="h-5 w-5 shrink-0 text-[#dd2a7b]" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z" /></svg>
                       DM @{firstMeeting.instagram}
+                    </a>
+                    <a
+                      href={DISCORD_URL}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="sm:col-span-2 inline-flex items-center justify-center gap-2 rounded-lg bg-[#5865F2] px-5 py-2.5 text-sm font-semibold text-white shadow-md hover:bg-[#4752C4] transition-all duration-200"
+                    >
+                      <svg className="h-5 w-5 shrink-0" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path d="M20.317 4.37a19.791 19.791 0 00-4.885-1.515.074.074 0 00-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 00-5.487 0 12.64 12.64 0 00-.617-1.25.077.077 0 00-.079-.037A19.736 19.736 0 003.677 4.37a.07.07 0 00-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 00.031.057 19.9 19.9 0 005.993 3.03.078.078 0 00.084-.028c.462-.63.874-1.295 1.226-1.994a.076.076 0 00-.041-.106 13.107 13.107 0 01-1.872-.892.077.077 0 01-.008-.128 10.2 10.2 0 00.372-.292.074.074 0 01.077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 01.078.01c.12.098.246.198.373.292a.077.077 0 01-.006.127 12.299 12.299 0 01-1.873.892.077.077 0 00-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 00.084.028 19.839 19.839 0 006.002-3.03.077.077 0 00.032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 00-.031-.03zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.956-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.946 2.418-2.157 2.418z" /></svg>
+                      Join BinaryHeart's Discord
                     </a>
                   </div>
                   <p className="mt-4 text-gray-900 font-medium">We're looking forward to seeing everyone!</p>
@@ -295,8 +333,94 @@ export default function Join() {
             </div>
 
             <div className="space-y-6">
+              {/* Mailing List Signup */}
+              <div id="mailing-list" className={`relative rounded-2xl bg-gradient-to-br ${BRAND_COLORS.BINARY_GRADIENT} backdrop-blur-sm p-6 sm:p-8 shadow-xl text-white`}>
+                <div className="flex flex-col sm:flex-row items-start gap-4 sm:gap-6">
+                  <div className="flex-shrink-0">
+                    <div className="flex h-14 w-14 items-center justify-center rounded-xl bg-white/20 backdrop-blur-sm">
+                      <svg className="h-7 w-7" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75" />
+                      </svg>
+                    </div>
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <h3 className="text-xl sm:text-2xl font-semibold mb-3">
+                      Join Our Mailing List
+                    </h3>
+                    <p className="text-white/90 mb-6 text-sm sm:text-base">
+                      Get meeting and event updates in your inbox.
+                    </p>
+                    <MailingListForm />
+                  </div>
+                </div>
+              </div>
+
+              {/* Cats on Campus Card */}
+              <div className={`relative rounded-2xl bg-gradient-to-br ${NORTHWESTERN_COLORS.GRADIENT_PRIMARY} p-6 sm:p-8 shadow-xl text-white`}>
+                <div className="flex flex-col sm:flex-row items-start gap-4 sm:gap-6">
+                  <div className="flex-shrink-0">
+                    <div className="flex h-14 w-14 items-center justify-center rounded-xl bg-white/20 backdrop-blur-sm">
+                      <svg className="h-7 w-7" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M18 18.72a9.094 9.094 0 003.741-.479 3 3 0 00-4.682-2.72m.94 3.198l.001.031c0 .225-.012.447-.037.666A11.944 11.944 0 0112 21c-2.17 0-4.207-.576-5.963-1.584A6.062 6.062 0 016 18.719m12 0a5.971 5.971 0 00-.941-3.197m0 0A5.995 5.995 0 0012 12.75a5.995 5.995 0 00-5.058 2.772m0 0a3 3 0 00-4.681 2.72 8.986 8.986 0 003.74.477m.94-3.197a5.971 5.971 0 00-.94 3.197M15 6.75a3 3 0 11-6 0 3 3 0 016 0zm6 3a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0zm-13.5 0a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0z" />
+                      </svg>
+                    </div>
+                  </div>
+                  <div className="flex-1 w-full">
+                    <h3 className="text-xl sm:text-2xl font-semibold mb-3">
+                      Join Us on Cats on Campus
+                    </h3>
+                    <p className="text-sm sm:text-base text-white/90 mb-6">
+                      Become an official member through Cats on Campus, Northwestern's student organization directory.
+                    </p>
+                    <a
+                      href={CATS_ON_CAMPUS_URL}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="group inline-flex items-center justify-center gap-2 rounded-xl bg-white px-5 sm:px-6 py-2.5 sm:py-3 text-sm sm:text-base font-semibold text-purple-700 shadow-lg transition-all duration-300 hover:scale-105 hover:shadow-xl"
+                    >
+                      <span>Join on Cats on Campus</span>
+                      <svg className="h-4 w-4 sm:h-5 sm:w-5 transition-transform duration-300 group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 6H5.25A2.25 2.25 0 003 8.25v10.5A2.25 2.25 0 005.25 21h10.5A2.25 2.25 0 0018 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25" />
+                      </svg>
+                    </a>
+                  </div>
+                </div>
+              </div>
+
+              {/* Discord Card */}
+              <div className="relative rounded-2xl bg-gradient-to-br from-[#6c77f5] to-[#4752C4] p-6 sm:p-8 shadow-xl text-white">
+                <div className="flex flex-col sm:flex-row items-start gap-4 sm:gap-6">
+                  <div className="flex-shrink-0">
+                    <div className="flex h-12 w-12 sm:h-14 sm:w-14 items-center justify-center rounded-xl bg-white/20 backdrop-blur-sm">
+                      <svg className="h-6 w-6 sm:h-7 sm:w-7" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M20.317 4.37a19.791 19.791 0 00-4.885-1.515.074.074 0 00-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 00-5.487 0 12.64 12.64 0 00-.617-1.25.077.077 0 00-.079-.037A19.736 19.736 0 003.677 4.37a.07.07 0 00-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 00.031.057 19.9 19.9 0 005.993 3.03.078.078 0 00.084-.028c.462-.63.874-1.295 1.226-1.994a.076.076 0 00-.041-.106 13.107 13.107 0 01-1.872-.892.077.077 0 01-.008-.128 10.2 10.2 0 00.372-.292.074.074 0 01.077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 01.078.01c.12.098.246.198.373.292a.077.077 0 01-.006.127 12.299 12.299 0 01-1.873.892.077.077 0 00-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 00.084.028 19.839 19.839 0 006.002-3.03.077.077 0 00.032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 00-.031-.03zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.956-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.946 2.418-2.157 2.418z" />
+                      </svg>
+                    </div>
+                  </div>
+                  <div className="flex-1 w-full">
+                    <h3 className="text-xl sm:text-2xl font-semibold mb-3">
+                      Join Our Discord Server
+                    </h3>
+                    <p className="text-sm sm:text-base text-white/90 mb-6">
+                      Chat with members from every BinaryHeart chapter, ask questions, and stay up-to-date with our latest projects and events.
+                    </p>
+                    <a
+                      href={DISCORD_URL}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="group inline-flex items-center justify-center gap-2 rounded-xl bg-white px-5 sm:px-6 py-2.5 sm:py-3 text-sm sm:text-base font-semibold text-[#4752C4] shadow-lg transition-all duration-300 hover:scale-105 hover:shadow-xl"
+                    >
+                      <span>Join Discord Server</span>
+                      <svg className="h-4 w-4 sm:h-5 sm:w-5 transition-transform duration-300 group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 6H5.25A2.25 2.25 0 003 8.25v10.5A2.25 2.25 0 005.25 21h10.5A2.25 2.25 0 0018 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25" />
+                      </svg>
+                    </a>
+                  </div>
+                </div>
+              </div>
+
               {/* Instagram Follow */}
-              <div className={`relative rounded-2xl bg-gradient-to-br ${NORTHWESTERN_COLORS.GRADIENT_PRIMARY_90} backdrop-blur-sm p-6 sm:p-8 shadow-xl text-white`}>
+              <div className={`relative rounded-2xl bg-gradient-to-br from-[#f58529] via-[#dd2a7b] to-[#8134af] backdrop-blur-sm p-6 sm:p-8 shadow-xl text-white`}>
                 <div className="flex flex-col sm:flex-row items-start gap-4 sm:gap-6">
                   <div className="flex-shrink-0">
                     <div className="flex h-14 w-14 items-center justify-center rounded-xl bg-white/20 backdrop-blur-sm">
@@ -316,7 +440,7 @@ export default function Join() {
                       href="https://instagram.com/binaryheartatnu"
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="group inline-flex items-center gap-2 rounded-xl bg-white px-5 sm:px-6 py-2.5 sm:py-3 text-sm sm:text-base font-semibold text-gray-900 shadow-lg transition-all duration-300 hover:scale-105 hover:shadow-xl"
+                      className="group inline-flex items-center gap-2 rounded-xl bg-white px-5 sm:px-6 py-2.5 sm:py-3 text-sm sm:text-base font-semibold text-[#c13584] shadow-lg transition-all duration-300 hover:scale-105 hover:shadow-xl"
                     >
                       <span>@binaryheartatnu</span>
                       <svg className="h-4 w-4 sm:h-5 sm:w-5 transition-transform duration-300 group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor">
@@ -370,5 +494,138 @@ export default function Join() {
         </div>
       </div>
     </main>
+  );
+}
+
+function normalizeEmail(raw: string) {
+  const email = raw.trim().toLowerCase().replace(/^mailto:/, '').replace(/\s+/g, '');
+  return email && !email.includes('@') ? `${email}@u.northwestern.edu` : email;
+}
+
+function readSavedEmail() {
+  try {
+    return localStorage.getItem(MAILING_LIST_STORAGE_KEY) ?? '';
+  } catch {
+    return '';
+  }
+}
+
+function MailingListForm() {
+  const [searchParams] = useSearchParams();
+  const [input, setInput] = useState('');
+  const [error, setError] = useState('');
+  const [status, setStatus] = useState<'idle' | 'submitting' | 'done' | 'failed'>(() => (readSavedEmail() ? 'done' : 'idle'));
+  const [email, setEmail] = useState(readSavedEmail);
+
+  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const normalized = normalizeEmail(input);
+    if (!NU_EMAIL.test(normalized)) {
+      setError('Please use your @u.northwestern.edu email. We need it to add you to Cats on Campus.');
+      return;
+    }
+    setError('');
+    setEmail(normalized);
+    setStatus('submitting');
+    const source = (searchParams.get('src') ?? 'website').toLowerCase().replace(/[^a-z0-9_-]/g, '').slice(0, 40) || 'website';
+    try {
+      // Google Forms doesn't allow reading the response cross-origin, so a
+      // completed request counts as success; only network errors fail.
+      await fetch(MAILING_LIST_FORM.formUrl, {
+        method: 'POST',
+        mode: 'no-cors',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: new URLSearchParams({
+          [MAILING_LIST_FORM.fieldIds.email]: normalized,
+          [MAILING_LIST_FORM.fieldIds.source]: source,
+        }).toString(),
+      });
+      try {
+        localStorage.setItem(MAILING_LIST_STORAGE_KEY, normalized);
+      } catch {
+        // Private browsing: nothing to remember.
+      }
+      setStatus('done');
+    } catch {
+      setStatus('failed');
+    }
+  };
+
+  if (status === 'done') {
+    return (
+      <div className="rounded-xl bg-white/15 p-4 ring-1 ring-white/30">
+        <p className="font-semibold">You're on the list!</p>
+        <p className="text-sm text-white/90 mt-1">
+          We'll send updates to <span className="font-medium break-all">{email}</span>. Check your inbox for a confirmation.
+        </p>
+        <button
+          type="button"
+          onClick={() => {
+            setInput('');
+            setStatus('idle');
+          }}
+          className="mt-2 text-sm font-medium underline underline-offset-2 text-white/90 hover:text-white"
+        >
+          Sign up a different email
+        </button>
+      </div>
+    );
+  }
+
+  if (status === 'failed') {
+    const subject = encodeURIComponent('Join the BinaryHeart NU mailing list');
+    const body = encodeURIComponent(`Hi BinaryHeart! Please add me to the Northwestern chapter mailing list: ${email}`);
+    return (
+      <div className="rounded-xl bg-white/15 p-4 ring-1 ring-white/30">
+        <p className="font-semibold">We couldn't save your signup.</p>
+        <p className="text-sm text-white/90 mt-1 mb-3">Send us a quick email instead and we'll add you.</p>
+        <a
+          href={`mailto:nu@binaryheart.org?subject=${subject}&body=${body}`}
+          className="inline-flex items-center gap-2 rounded-xl bg-white px-5 py-2.5 text-sm font-semibold text-gray-900 shadow-lg"
+        >
+          Join by email
+        </a>
+      </div>
+    );
+  }
+
+  return (
+    <form onSubmit={handleSubmit} noValidate>
+      <label htmlFor="mailing-list-email" className="block text-sm font-semibold mb-2">
+        Northwestern email
+      </label>
+      <div className="flex flex-col sm:flex-row gap-3">
+        <div className="flex flex-1 min-w-0 items-center rounded-xl bg-white text-gray-900 shadow-lg focus-within:ring-2 focus-within:ring-white">
+          <input
+            id="mailing-list-email"
+            type="email"
+            inputMode="email"
+            autoComplete="email"
+            autoCapitalize="none"
+            spellCheck={false}
+            enterKeyHint="go"
+            size={1}
+            placeholder="firstlast2029"
+            value={input}
+            onChange={e => {
+              setInput(e.target.value);
+              setError('');
+            }}
+            className="w-0 min-w-0 flex-1 bg-transparent pl-4 pr-1 py-3 text-base outline-none placeholder:text-gray-400"
+          />
+          {!input.includes('@') && (
+            <span className="shrink-0 pr-4 text-sm sm:text-base text-gray-500 whitespace-nowrap">@u.northwestern.edu</span>
+          )}
+        </div>
+        <button
+          type="submit"
+          disabled={status === 'submitting'}
+          className="rounded-xl bg-gray-900 px-6 py-3 text-base font-semibold text-white shadow-lg transition-all duration-300 hover:bg-gray-800 disabled:opacity-70"
+        >
+          {status === 'submitting' ? 'Joining…' : 'Join'}
+        </button>
+      </div>
+      {error && <p className="mt-2 text-sm font-medium text-white" role="alert">{error}</p>}
+    </form>
   );
 }
